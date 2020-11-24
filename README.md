@@ -6,6 +6,11 @@ implemented as an extension using the [xk6](https://github.com/k6io/xk6) system.
 | :exclamation: This is a proof of concept, isn't supported by the k6 team, and may break in the future. USE AT YOUR OWN RISK! |
 |------|
 
+Note that there is already a [k6 Redis extension](https://github.com/dgzlopes/k6-extension-redis)
+that uses a different Go library and slightly different API. The extension in this
+current repo served as an example for an [xk6 tutorial article](https://k6.io/blog/extending-k6-with-xk6),
+but using one or the other is up to the user. :)
+
 ## Build
 
 To build a `k6` binary with this extension, first ensure you have the prerequisites:
