@@ -1,10 +1,12 @@
 package redis
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-redis/redis/v8"
 
+	"github.com/loadimpact/k6/js/common"
 	"github.com/loadimpact/k6/js/modules"
 )
 
@@ -22,9 +24,11 @@ type Client struct {
 	client *redis.Client
 }
 
-// NewClient creates a new Redis client with the provided options.
-func (r *Redis) NewClient(opts *redis.Options) *Client {
-	return &Client{client: redis.NewClient(opts)}
+// XClient represents the Client constructor (i.e. `new redis.Client()`) and
+// returns a new Redis client object.
+func (r *Redis) XClient(ctxPtr *context.Context, opts *redis.Options) interface{} {
+	rt := common.GetRuntime(*ctxPtr)
+	return common.Bind(rt, &Client{client: redis.NewClient(opts)}, ctxPtr)
 }
 
 // Set the given key with the given value and expiration time.
