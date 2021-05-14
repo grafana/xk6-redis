@@ -1,12 +1,12 @@
 # xk6-redis
 
-This is a Redis client library for [k6](https://github.com/loadimpact/k6),
+This is a Redis client library for [k6](https://github.com/k6io/k6),
 implemented as an extension using the [xk6](https://github.com/k6io/xk6) system.
 
 | :exclamation: This is a proof of concept, isn't supported by the k6 team, and may break in the future. USE AT YOUR OWN RISK! |
 |------|
 
-Note that there is already a [k6 Redis extension](https://github.com/dgzlopes/k6-extension-redis)
+Note that there is already a [k6 Redis extension](https://github.com/dgzlopes/xk6-redis)
 that uses a different Go library and slightly different API. The extension in this
 current repo served as an example for an [xk6 tutorial article](https://k6.io/blog/extending-k6-with-xk6),
 but using one or the other is up to the user. :)
@@ -22,12 +22,12 @@ Then:
 
 1. Install `xk6`:
   ```shell
-  go get -u github.com/k6io/xk6/cmd/xk6
+  go install github.com/k6io/xk6/cmd/xk6@latest
   ```
 
 2. Build the binary:
   ```shell
-  xk6 build v0.29.0 --with github.com/k6io/xk6-redis
+  xk6 build v0.32.0 --with github.com/k6io/xk6-redis
   ```
 
 ## Example test script
