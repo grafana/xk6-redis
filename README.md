@@ -27,7 +27,7 @@ Then:
 
 2. Build the binary:
   ```shell
-  xk6 build v0.32.0 --with github.com/k6io/xk6-redis
+  xk6 build v0.33.0 --with github.com/k6io/xk6-redis
   ```
 
 ## Example test script
@@ -76,4 +76,22 @@ default ✓ [======================================] 1 VUs  00m00.0s/10m0s  1/1 
     iteration_duration...: avg=834.68µs min=834.68µs med=834.68µs max=834.68µs p(90)=834.68µs p(95)=834.68µs
     iterations...........: 1   54.622575/s
 
+```
+
+
+## Example for Redis in cluster mode
+
+```javascript
+import redis from 'k6/x/redis';
+
+const client = new redis.ClusterClient({
+  addrs: ['localhost:6379', 'localhost:6380', 'localhost:6381', 'localhost:6382', 'localhost:6383', 'localhost:6384'],
+  password: 'bitnami',
+  db: 0,
+});
+
+export default function () {
+  client.set('mykey_' + __VU + '_' + __ITER, 'myvalue_' + __VU + '_' + __ITER, 0);
+  console.log(`mykey => ${client.get('mykey_'+ __VU + '_' + __ITER)}`);
+}
 ```
