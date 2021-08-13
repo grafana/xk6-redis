@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -41,7 +40,6 @@ func (r *Redis) XClient(ctxPtr *context.Context, opts *redis.Options) interface{
 // returns a new Redis client object.
 func (r *Redis) XClusterClient(ctxPtr *context.Context, opts *redis.ClusterOptions) interface{} {
 	rt := common.GetRuntime(*ctxPtr)
-	fmt.Printf("%v", opts.Addrs)
 	return common.Bind(rt, &ClusterClient{client: redis.NewClusterClient(opts)}, ctxPtr)
 }
 
