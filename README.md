@@ -77,3 +77,8 @@ default ✓ [======================================] 1 VUs  00m00.0s/10m0s  1/1 
     iterations...........: 1   54.622575/s
 
 ```
+
+
+## See also
+
+- [Benchmarking Redis with k6](https://k6.io/blog/benchmarking-redis-with-k6/)
