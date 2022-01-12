@@ -21,14 +21,14 @@ type Redis struct{}
 
 // Client is the Redis client wrapper.
 type Client struct {
-	client *redis.Client
+	client redis.UniversalClient
 }
 
 // XClient represents the Client constructor (i.e. `new redis.Client()`) and
 // returns a new Redis client object.
-func (r *Redis) XClient(ctxPtr *context.Context, opts *redis.Options) interface{} {
+func (r *Redis) XClient(ctxPtr *context.Context, opts *redis.UniversalOptions) interface{} {
 	rt := common.GetRuntime(*ctxPtr)
-	return common.Bind(rt, &Client{client: redis.NewClient(opts)}, ctxPtr)
+	return common.Bind(rt, &Client{client: redis.NewUniversalClient(opts)}, ctxPtr)
 }
 
 // Set the given key with the given value and expiration time.

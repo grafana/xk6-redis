@@ -27,8 +27,14 @@ Then:
 
 2. Build the binary:
   ```shell
-  xk6 build v0.32.0 --with github.com/k6io/xk6-redis
+  xk6 build v0.35.0 --with github.com/k6io/xk6-redis
   ```
+
+Or use this command to build `k6` during your extension deployment:
+
+```shell
+  xk6 build v0.35.0 --with github.com/k6io/xk6-redis=$(pwd)
+```
 
 ## Example test script
 

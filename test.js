@@ -1,7 +1,7 @@
 import redis from 'k6/x/redis';
 
 const client = new redis.Client({
-  addr: 'localhost:6379',
+  addrs: ['localhost:6379'],
   password: '',
   db: 0,
 });
