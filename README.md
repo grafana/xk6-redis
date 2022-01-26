@@ -1,7 +1,7 @@
 # xk6-redis
 
-This is a Redis client library for [k6](https://github.com/k6io/k6),
-implemented as an extension using the [xk6](https://github.com/k6io/xk6) system.
+This is a Redis client library for [k6](https://github.com/grafana/k6),
+implemented as an extension using the [xk6](https://github.com/grafana/xk6) system.
 
 | :exclamation: This is a proof of concept, isn't supported by the k6 team, and may break in the future. USE AT YOUR OWN RISK! |
 |------|
@@ -22,12 +22,12 @@ Then:
 
 1. Install `xk6`:
   ```shell
-  go install github.com/k6io/xk6/cmd/xk6@latest
+  go install go.k6.io/xk6/cmd/xk6@latest
   ```
 
 2. Build the binary:
   ```shell
-  xk6 build v0.32.0 --with github.com/k6io/xk6-redis
+  xk6 build --with github.com/grafana/xk6-redis
   ```
 
 ## Example test script
