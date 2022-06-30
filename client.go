@@ -36,6 +36,7 @@ func (c *Client) Set(key string, value interface{}, expiration int) *goja.Promis
 		result, err := c.redisClient.Set(c.vu.Context(), key, value, time.Duration(expiration)*time.Second).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(result)
@@ -57,6 +58,7 @@ func (c *Client) Get(key string) *goja.Promise {
 		value, err := c.redisClient.Get(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(value)
@@ -83,6 +85,7 @@ func (c *Client) GetSet(key string, value interface{}) *goja.Promise {
 		oldValue, err := c.redisClient.GetSet(c.vu.Context(), key, value).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(oldValue)
@@ -104,6 +107,7 @@ func (c *Client) Del(keys ...string) *goja.Promise {
 		n, err := c.redisClient.Del(c.vu.Context(), keys...).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(n)
@@ -125,6 +129,7 @@ func (c *Client) GetDel(key string) *goja.Promise {
 		value, err := c.redisClient.GetDel(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(value)
@@ -148,6 +153,7 @@ func (c *Client) Exists(keys ...string) *goja.Promise {
 		n, err := c.redisClient.Exists(c.vu.Context(), keys...).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(n)
@@ -172,6 +178,7 @@ func (c *Client) Incr(key string) *goja.Promise {
 		newValue, err := c.redisClient.Incr(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(newValue)
@@ -196,6 +203,7 @@ func (c *Client) IncrBy(key string, increment int64) *goja.Promise {
 		newValue, err := c.redisClient.IncrBy(c.vu.Context(), key, increment).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(newValue)
@@ -220,6 +228,7 @@ func (c *Client) Decr(key string) *goja.Promise {
 		newValue, err := c.redisClient.Decr(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(newValue)
@@ -244,6 +253,7 @@ func (c *Client) DecrBy(key string, decrement int64) *goja.Promise {
 		newValue, err := c.redisClient.DecrBy(c.vu.Context(), key, decrement).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(newValue)
@@ -265,6 +275,7 @@ func (c *Client) RandomKey() *goja.Promise {
 		key, err := c.redisClient.RandomKey(c.vu.Context()).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(key)
@@ -286,6 +297,7 @@ func (c *Client) Mget(keys ...string) *goja.Promise {
 		values, err := c.redisClient.MGet(c.vu.Context(), keys...).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(values)
@@ -310,6 +322,7 @@ func (c *Client) Expire(key string, seconds int) *goja.Promise {
 		ok, err := c.redisClient.Expire(c.vu.Context(), key, time.Duration(seconds)*time.Second).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(ok)
@@ -332,6 +345,7 @@ func (c *Client) Ttl(key string) *goja.Promise {
 		duration, err := c.redisClient.TTL(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(duration.Seconds())
@@ -353,6 +367,7 @@ func (c *Client) Persist(key string) *goja.Promise {
 		ok, err := c.redisClient.Persist(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(ok)
@@ -382,6 +397,7 @@ func (c *Client) Lpush(key string, values ...interface{}) *goja.Promise {
 		listLength, err := c.redisClient.LPush(c.vu.Context(), key, values...).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(listLength)
@@ -410,6 +426,7 @@ func (c *Client) Rpush(key string, values ...interface{}) *goja.Promise {
 		listLength, err := c.redisClient.RPush(c.vu.Context(), key, values...).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(listLength)
@@ -431,6 +448,7 @@ func (c *Client) Lpop(key string) *goja.Promise {
 		value, err := c.redisClient.LPop(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(value)
@@ -452,6 +470,7 @@ func (c *Client) Rpop(key string) *goja.Promise {
 		value, err := c.redisClient.RPop(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(value)
@@ -476,6 +495,7 @@ func (c *Client) Lrange(key string, start, stop int64) *goja.Promise {
 		values, err := c.redisClient.LRange(c.vu.Context(), key, start, stop).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(values)
@@ -499,6 +519,7 @@ func (c *Client) Lindex(key string, index int64) *goja.Promise {
 		value, err := c.redisClient.LIndex(c.vu.Context(), key, index).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(value)
@@ -520,6 +541,7 @@ func (c *Client) Lset(key string, index int64, element string) *goja.Promise {
 		value, err := c.redisClient.LSet(c.vu.Context(), key, index, element).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(value)
@@ -544,6 +566,7 @@ func (c *Client) Lrem(key string, count int64, value string) *goja.Promise {
 		n, err := c.redisClient.LRem(c.vu.Context(), key, count, value).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(n)
@@ -566,6 +589,7 @@ func (c *Client) Llen(key string) *goja.Promise {
 		length, err := c.redisClient.LLen(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(length)
@@ -594,6 +618,7 @@ func (c *Client) Hset(key string, field string, value interface{}) *goja.Promise
 		n, err := c.redisClient.HSet(c.vu.Context(), key, field, value).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(n)
@@ -618,6 +643,7 @@ func (c *Client) Hsetnx(key, field, value string) *goja.Promise {
 		ok, err := c.redisClient.HSetNX(c.vu.Context(), key, field, value).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(ok)
@@ -639,6 +665,7 @@ func (c *Client) Hget(key, field string) *goja.Promise {
 		value, err := c.redisClient.HGet(c.vu.Context(), key, field).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(value)
@@ -660,6 +687,7 @@ func (c *Client) Hdel(key string, fields ...string) *goja.Promise {
 		n, err := c.redisClient.HDel(c.vu.Context(), key, fields...).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(n)
@@ -681,6 +709,7 @@ func (c *Client) Hgetall(key string) *goja.Promise {
 		hashMap, err := c.redisClient.HGetAll(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(hashMap)
@@ -702,6 +731,7 @@ func (c *Client) Hkeys(key string) *goja.Promise {
 		keys, err := c.redisClient.HKeys(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(keys)
@@ -723,6 +753,7 @@ func (c *Client) Hvals(key string) *goja.Promise {
 		values, err := c.redisClient.HVals(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(values)
@@ -744,6 +775,7 @@ func (c *Client) Hlen(key string) *goja.Promise {
 		n, err := c.redisClient.HLen(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(n)
@@ -768,6 +800,7 @@ func (c *Client) Hincrby(key, field string, increment int64) *goja.Promise {
 		newValue, err := c.redisClient.HIncrBy(c.vu.Context(), key, field, increment).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(newValue)
@@ -796,6 +829,7 @@ func (c *Client) Sadd(key string, members ...interface{}) *goja.Promise {
 		n, err := c.redisClient.SAdd(c.vu.Context(), key, members...).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(n)
@@ -824,6 +858,7 @@ func (c *Client) Srem(key string, members ...interface{}) *goja.Promise {
 		n, err := c.redisClient.SRem(c.vu.Context(), key, members...).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(n)
@@ -850,6 +885,7 @@ func (c *Client) Sismember(key string, member interface{}) *goja.Promise {
 		ok, err := c.redisClient.SIsMember(c.vu.Context(), key, member).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(ok)
@@ -871,6 +907,7 @@ func (c *Client) Smembers(key string) *goja.Promise {
 		members, err := c.redisClient.SMembers(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(members)
@@ -892,6 +929,7 @@ func (c *Client) Srandmember(key string) *goja.Promise {
 		element, err := c.redisClient.SRandMember(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(element)
@@ -913,6 +951,7 @@ func (c *Client) Spop(key string) *goja.Promise {
 		element, err := c.redisClient.SPop(c.vu.Context(), key).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(element)
@@ -943,6 +982,7 @@ func (c *Client) SendCommand(command string, args ...interface{}) *goja.Promise 
 		cmd, err := c.redisClient.Do(c.vu.Context(), doArgs...).Result()
 		if err != nil {
 			reject(err)
+			return
 		}
 
 		resolve(cmd)
