@@ -1060,7 +1060,7 @@ func (c *Client) isSupportedType(offset int, args ...interface{}) error {
 	for idx, arg := range args {
 		switch arg.(type) {
 		case string, int, int64, float64, bool:
-			return nil
+			continue
 		default:
 			return fmt.Errorf("unsupported type: %T for argument at index: %d", arg, idx+offset)
 		}
