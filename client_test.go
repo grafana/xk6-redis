@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
@@ -16,6 +17,142 @@ import (
 	"go.k6.io/k6/metrics"
 	"gopkg.in/guregu/null.v3"
 )
+
+func TestClientConnect(t *testing.T) {
+	t.Parallel()
+
+	t.Run("connecting in the init context throws", func(t *testing.T) {
+		t.Parallel()
+
+		ts := newInitContextTestSetup(t) // setup to execute code in the init context
+
+		gotScriptErr := ts.ev.Start(func() error {
+			_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				addrs: new Array("%s"),
+			});
+
+			redis.connect();
+		`, ts.redis.Addr()))
+
+			return err
+		})
+
+		assert.Error(t, gotScriptErr)
+		assert.Contains(t, gotScriptErr.Error(), "connecting to a redis server in the init context is not supported")
+	})
+
+	t.Run("connecting in the main context works", func(t *testing.T) {
+		t.Parallel()
+
+		ts := newTestSetup(t) // Setup to execute code in the main context
+
+		gotScriptErr := ts.ev.Start(func() error {
+			_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				addrs: new Array("%s"),
+			});
+
+			redis.connect();
+			`, ts.redis.Addr()))
+
+			return err
+		})
+
+		assert.NoError(t, gotScriptErr)
+	})
+}
+
+func TestClientClose(t *testing.T) {
+	t.Parallel()
+
+	t.Run("closing in the init context throws", func(t *testing.T) {
+		t.Parallel()
+
+		ts := newInitContextTestSetup(t) // setup to execute code in the init context
+
+		gotScriptErr := ts.ev.Start(func() error {
+			_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				addrs: new Array("%s"),
+			});
+
+			redis.close();
+		`, ts.redis.Addr()))
+
+			return err
+		})
+
+		assert.Error(t, gotScriptErr)
+		assert.Contains(t, gotScriptErr.Error(), "closing a redis connection in the init context is not supported")
+	})
+
+	t.Run("closing a connected client in the main context", func(t *testing.T) {
+		t.Parallel()
+
+		ts := newTestSetup(t) // Setup to execute code in the main context
+
+		gotScriptErr := ts.ev.Start(func() error {
+			_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				addrs: new Array("%s"),
+			});
+
+			redis.connect();
+			redis.close();
+
+			if (redis.isConnected() === true) {
+				throw new Error("redis client is still connected");
+			}
+			`, ts.redis.Addr()))
+
+			return err
+		})
+
+		assert.NoError(t, gotScriptErr)
+	})
+
+	t.Run("closing an already closed client ", func(t *testing.T) {
+		t.Parallel()
+
+		ts := newTestSetup(t) // Setup to execute code in the main context
+
+		gotScriptErr := ts.ev.Start(func() error {
+			_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				addrs: new Array("%s"),
+			});
+
+			redis.close();
+			`, ts.redis.Addr()))
+
+			return err
+		})
+
+		assert.NoError(t, gotScriptErr)
+	})
+
+	t.Run("double closing a client ", func(t *testing.T) {
+		t.Parallel()
+
+		ts := newTestSetup(t) // Setup to execute code in the main context
+
+		gotScriptErr := ts.ev.Start(func() error {
+			_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				addrs: new Array("%s"),
+			});
+
+			redis.close();
+			redis.close();
+			`, ts.redis.Addr()))
+
+			return err
+		})
+
+		assert.NoError(t, gotScriptErr)
+	})
+}
 
 func TestClientIsSupportedType(t *testing.T) {
 	t.Parallel()

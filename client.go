@@ -19,10 +19,12 @@ type Client struct {
 }
 
 // Set the given key with the given value.
+//
+// The value for `expiration` is interpreted as seconds.
 func (c *Client) Set(key string, value interface{}, expiration int) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -49,7 +51,7 @@ func (c *Client) Set(key string, value interface{}, expiration int) *goja.Promis
 func (c *Client) Get(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -71,7 +73,7 @@ func (c *Client) Get(key string) *goja.Promise {
 func (c *Client) GetSet(key string, value interface{}) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -98,7 +100,7 @@ func (c *Client) GetSet(key string, value interface{}) *goja.Promise {
 func (c *Client) Del(keys ...string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -120,7 +122,7 @@ func (c *Client) Del(keys ...string) *goja.Promise {
 func (c *Client) GetDel(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -144,7 +146,7 @@ func (c *Client) GetDel(key string) *goja.Promise {
 func (c *Client) Exists(keys ...string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -169,7 +171,7 @@ func (c *Client) Exists(keys ...string) *goja.Promise {
 func (c *Client) Incr(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -194,7 +196,7 @@ func (c *Client) Incr(key string) *goja.Promise {
 func (c *Client) IncrBy(key string, increment int64) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -219,7 +221,7 @@ func (c *Client) IncrBy(key string, increment int64) *goja.Promise {
 func (c *Client) Decr(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -244,7 +246,7 @@ func (c *Client) Decr(key string) *goja.Promise {
 func (c *Client) DecrBy(key string, decrement int64) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -266,7 +268,7 @@ func (c *Client) DecrBy(key string, decrement int64) *goja.Promise {
 func (c *Client) RandomKey() *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -288,7 +290,7 @@ func (c *Client) RandomKey() *goja.Promise {
 func (c *Client) Mget(keys ...string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -313,7 +315,7 @@ func (c *Client) Mget(keys ...string) *goja.Promise {
 func (c *Client) Expire(key string, seconds int) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -336,7 +338,7 @@ func (c *Client) Expire(key string, seconds int) *goja.Promise {
 func (c *Client) Ttl(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -358,7 +360,7 @@ func (c *Client) Ttl(key string) *goja.Promise {
 func (c *Client) Persist(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -383,7 +385,7 @@ func (c *Client) Persist(key string) *goja.Promise {
 func (c *Client) Lpush(key string, values ...interface{}) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -412,7 +414,7 @@ func (c *Client) Lpush(key string, values ...interface{}) *goja.Promise {
 func (c *Client) Rpush(key string, values ...interface{}) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -439,7 +441,7 @@ func (c *Client) Rpush(key string, values ...interface{}) *goja.Promise {
 func (c *Client) Lpop(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -461,7 +463,7 @@ func (c *Client) Lpop(key string) *goja.Promise {
 func (c *Client) Rpop(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -486,7 +488,7 @@ func (c *Client) Rpop(key string) *goja.Promise {
 func (c *Client) Lrange(key string, start, stop int64) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -510,7 +512,7 @@ func (c *Client) Lrange(key string, start, stop int64) *goja.Promise {
 func (c *Client) Lindex(key string, index int64) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -532,7 +534,7 @@ func (c *Client) Lindex(key string, index int64) *goja.Promise {
 func (c *Client) Lset(key string, index int64, element string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -557,7 +559,7 @@ func (c *Client) Lset(key string, index int64, element string) *goja.Promise {
 func (c *Client) Lrem(key string, count int64, value string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -580,7 +582,7 @@ func (c *Client) Lrem(key string, count int64, value string) *goja.Promise {
 func (c *Client) Llen(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -604,7 +606,7 @@ func (c *Client) Llen(key string) *goja.Promise {
 func (c *Client) Hset(key string, field string, value interface{}) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -634,7 +636,7 @@ func (c *Client) Hset(key string, field string, value interface{}) *goja.Promise
 func (c *Client) Hsetnx(key, field, value string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -656,7 +658,7 @@ func (c *Client) Hsetnx(key, field, value string) *goja.Promise {
 func (c *Client) Hget(key, field string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -678,7 +680,7 @@ func (c *Client) Hget(key, field string) *goja.Promise {
 func (c *Client) Hdel(key string, fields ...string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -700,7 +702,7 @@ func (c *Client) Hdel(key string, fields ...string) *goja.Promise {
 func (c *Client) Hgetall(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -722,7 +724,7 @@ func (c *Client) Hgetall(key string) *goja.Promise {
 func (c *Client) Hkeys(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -744,7 +746,7 @@ func (c *Client) Hkeys(key string) *goja.Promise {
 func (c *Client) Hvals(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -766,7 +768,7 @@ func (c *Client) Hvals(key string) *goja.Promise {
 func (c *Client) Hlen(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -791,7 +793,7 @@ func (c *Client) Hlen(key string) *goja.Promise {
 func (c *Client) Hincrby(key, field string, increment int64) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -815,7 +817,7 @@ func (c *Client) Hincrby(key, field string, increment int64) *goja.Promise {
 func (c *Client) Sadd(key string, members ...interface{}) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -844,7 +846,7 @@ func (c *Client) Sadd(key string, members ...interface{}) *goja.Promise {
 func (c *Client) Srem(key string, members ...interface{}) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -871,7 +873,7 @@ func (c *Client) Srem(key string, members ...interface{}) *goja.Promise {
 func (c *Client) Sismember(key string, member interface{}) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -898,7 +900,7 @@ func (c *Client) Sismember(key string, member interface{}) *goja.Promise {
 func (c *Client) Smembers(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -920,7 +922,7 @@ func (c *Client) Smembers(key string) *goja.Promise {
 func (c *Client) Srandmember(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -942,7 +944,7 @@ func (c *Client) Srandmember(key string) *goja.Promise {
 func (c *Client) Spop(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -968,7 +970,7 @@ func (c *Client) SendCommand(command string, args ...interface{}) *goja.Promise 
 
 	promise, resolve, reject := c.makeHandledPromise()
 
-	if err := c.connect(); err != nil {
+	if err := c.Connect(); err != nil {
 		reject(err)
 		return promise
 	}
@@ -1014,9 +1016,9 @@ func (c *Client) makeHandledPromise() (*goja.Promise, func(interface{}), func(in
 		}
 }
 
-// connect establishes the client's connection to the target
+// Connect establishes the client's connection to the target
 // redis instance(s).
-func (c *Client) connect() error {
+func (c *Client) Connect() error {
 	// A nil VU state indicates we are in the init context.
 	// As a general convention, k6 should not perform IO in the
 	// init context. Thus, the Connect method will error if
@@ -1026,6 +1028,8 @@ func (c *Client) connect() error {
 		return common.NewInitContextError("connecting to a redis server in the init context is not supported")
 	}
 
+	// If the redisClient is already instantiated, it is safe
+	// to assume that the connection is already established.
 	if c.redisClient == nil {
 		// If k6 has a TLSConfig set in its state, use
 		// it has redis' client TLSConfig too.
@@ -1041,6 +1045,35 @@ func (c *Client) connect() error {
 	}
 
 	return nil
+}
+
+// Close closes the client's connection to the target redis instance(s).
+func (c *Client) Close() error {
+	// A nil VU state indicates we are in the init context.
+	// As a general convention, k6 should not perform IO in the
+	// init context. As the Close method is symmetric to the Connect
+	// method, it will error if called in the init context; even though
+	// calling doesn't effectively perform any IO.
+	if c.vu.State() == nil {
+		return common.NewInitContextError("closing a redis connection in the init context is not supported")
+	}
+
+	// The redisClient attribute is set when redis' client dialer,
+	// TLSConfig and options are set: allowing the redis client to
+	// communicate with the outside. Setting it to nil will cause
+	// the Client to not be able to communicate with the outside.
+	if c.redisClient != nil {
+		err := c.redisClient.Close()
+		c.redisClient = nil
+		return err
+	}
+
+	return nil
+}
+
+// IsConnected returns true if the client is connected to redis.
+func (c *Client) IsConnected() bool {
+	return c.redisClient != nil
 }
 
 // isSupportedType returns whether the provided arguments are of a type
