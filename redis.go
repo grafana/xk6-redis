@@ -1,4 +1,5 @@
 // Package redis implements a redis client for k6.
+// nolint: exhaustruct
 package redis
 
 import (
