@@ -33,51 +33,99 @@ Then:
 ## Example test script
 
 ```javascript
-import redis from "k6/x/redis";
+import { check } from "k6";
 import http from "k6/http";
+import redis from "k6/x/redis";
+import exec from "k6/execution";
+import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
 export const options = {
-  vus: 10,
-  duration: "1m",
+  scenarios: {
+    redisPerformance: {
+      executor: "shared-iterations",
+      vus: 10,
+      iterations: 200,
+      exec: "measureRedisPerformance",
+    },
+    usingRedisData: {
+      executor: "shared-iterations",
+      vus: 10,
+      iterations: 200,
+      exec: "measureUsingRedisData",
+    },
+  },
 };
 
-// Prepare and connect a redis client in the init context
-const r = new redis.Client({
-  addrs: new Array("localhost:6379"),
-  password: "foobar",
+// Instantiate a new redis client
+const redisClient = new redis.Client({
+  addrs: __ENV.REDIS_ADDRS.split(",") || new Array("localhost:6379"), // in the form of "host:port", separated by commas
+  password: __ENV.REDIS_PASSWORD || "",
 });
 
-export function setup() {
-  // Store crocodile ids in a set for later use
-  for (let i = 0; i < 8; i++) {
-    r.sadd("crocodile_ids", i);
-  }
-}
+// Prepare an array of crocodile ids for later use
+// in the context of the measureUsingRedisData function.
+const crocodileIDs = new Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 
-export default function () {
-  r.srandmember("crocodile_ids")
-    .then((id) => {
-      // Get a random crocodile id and use it as the url to request
-      const url = `https://test-api.k6.io/crocodile/${id}`;
-      http.get(url);
-      return url;
-    })
-    .then((url) => {
-      // Store how many times we have tested this URL in a
-      // redis hash.
-      return r.hincrby("k6_crocodile_fetched", url);
+export function measureRedisPerformance() {
+  // VUs are executed in a parallel fashion,
+  // thus, to ensure that parallel VUs are not
+  // modifying the same key at the same time,
+  // we use keys indexed by the VU id.
+  const key = `foo-${exec.vu.idInTest}`;
+
+  redisClient
+    .set(`foo-${exec.vu.idInTest}`, 1)
+    .then(() => redisClient.get(`foo-${exec.vu.idInTest}`))
+    .then((value) => redisClient.incrBy(`foo-${exec.vu.idInTest}`, value))
+    .then((_) => redisClient.del(`foo-${exec.vu.idInTest}`))
+    .then((_) => redisClient.exists(`foo-${exec.vu.idInTest}`))
+    .then((exists) => {
+      if (exists !== 0) {
+        throw new Error("foo should have been deleted");
+      }
     });
 }
 
+export function setup() {
+  redisClient.sadd("crocodile_ids", ...crocodileIDs);
+}
+
+export function measureUsingRedisData() {
+  // Pick a random crocodile id from the dedicated redis set,
+  // we have filled in setup().
+  redisClient
+    .srandmember("crocodile_ids")
+    .then((randomID) => {
+      const url = `https://test-api.k6.io/public/crocodiles/${randomID}`;
+      const res = http.get(url);
+
+      check(res, {
+        "status is 200": (r) => r.status === 200,
+        "content-type is application/json": (r) =>
+          r.headers["content-type"] === "application/json",
+      });
+
+      return url;
+    })
+    .then((url) => redisClient.hincrby("k6_crocodile_fetched", url, 1));
+}
+
 export function teardown() {
-  // Let's clean after ourselves
-  r.del("crocodile_ids");
+  redisClient.del("crocodile_ids");
 }
 
 export function handleSummary(data) {
-  // Store the summary in Redis
-  r.set(`k6_report_${Date.now()}`, JSON.stringify(data));
-  r.del(`k6_crocodile_fetched`);
+  redisClient
+    .hgetall("k6_crocodile_fetched")
+    .then((fetched) => Object.assign(data, { k6_crocodile_fetched: fetched }))
+    .then((data) =>
+      redisClient.set(`k6_report_${Date.now()}`, JSON.stringify(data))
+    )
+    .then(() => redisClient.del("k6_crocodile_fetched"));
+
+  return {
+    stdout: textSummary(data, { indent: "  ", enableColors: true }),
+  };
 }
 ```
 
