@@ -7,9 +7,9 @@ implemented as an extension using the [xk6](https://github.com/grafana/xk6) syst
 | ---------------------------------------------------------------------------------------------------------------------------- |
 
 Note that there is already a [k6 Redis extension](https://github.com/dgzlopes/xk6-redis)
-that uses a different Go library and slightly different API. The extension in this
+that uses a different Go library and a different API. The extension in this
 current repo served as an example for an [xk6 tutorial article](https://k6.io/blog/extending-k6-with-xk6),
-but using one or the other is up to the user. :)
+but using one or the other is up to the user. :) 
 
 ## Build
 
@@ -30,7 +30,51 @@ Then:
   xk6 build --with github.com/grafana/xk6-redis
   ```
 
-## Example test script
+## Usage
+
+This extension exposes a [promise](https://javascript.info/promise-basics)-based API. As opposed to most other current k6 modules and extensions, who operate in a synchronous manner,
+xk6-redis operates in an asynchronous manner. In practice, this means that using the Redis client's methods won't block the execution of the test,
+and that the test will continue to run even if the Redis client is not ready to respond to the request.
+
+One potential caveat introduced by this new execution model, is that to depend on operations against Redis, all following operations
+should be made in the context of the [promise chain](https://javascript.info/promise-chaining). As demonstrated in the examples below, whenever there is a dependency on a Redis
+operation result or return value, the operation, should be wrapped in a promise itself. That way, a user can perform asynchronous interactions
+with Redis in a seemingly synchronous manner.
+
+For instance, if you were to depend on values stored in Redis to perform HTTP calls, those HTTP calls should be made in the context of the Redis promise chain:
+
+```javascript
+// Instantiate a new redis client
+const redisClient = new redis.Client({
+    addrs: new Array('localhost:6379'),
+    password: 'foobar',
+})
+
+export default function() {
+    // Once the SRANDMEMBER operation is succesfull,
+    // it resolves the promise and returns the random
+    // set member value to the caller of the resolve callback.
+    //
+    // The next promise performs the synchronous HTTP call, and
+    // returns a promise to the next operation, which uses the 
+    // passed URL value to store some data in redis.
+    redisClient.srandmember('client_ids')
+        .then((randomID) => {
+            const url = `https://my.url/${randomID}`
+            const res = http.get(url)
+
+            // Do something with the result...
+
+            // return a promise resolving to the URL
+            return url
+        })
+        .then((url) => redisClient.hincrby('k6_crocodile_fetched', url, 1))
+}
+```
+
+## Example test scripts
+
+In this example we demonstrate two scenarios: one load testing a redis instance, another using redis as an external data store used throughout the test itself.
 
 ```javascript
 import { check } from 'k6'
