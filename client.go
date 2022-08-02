@@ -19,6 +19,10 @@ type Client struct {
 }
 
 // Set the given key with the given value.
+//
+// If the provided value is not a supported type, the promise is rejected with an error.
+//
+// The value for `expiration` is interpreted as seconds.
 func (c *Client) Set(key string, value interface{}, expiration int) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -46,6 +50,10 @@ func (c *Client) Set(key string, value interface{}, expiration int) *goja.Promis
 }
 
 // Get returns the value for the given key.
+//
+// If the key does not exist, the promise is rejected with an error.
+//
+// If the key does not exist, the promise is rejected with an error.
 func (c *Client) Get(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -68,6 +76,8 @@ func (c *Client) Get(key string) *goja.Promise {
 }
 
 // GetSet sets the value of key to value and returns the old value stored
+//
+// If the provided value is not a supported type, the promise is rejected with an error.
 func (c *Client) GetSet(key string, value interface{}) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -117,6 +127,8 @@ func (c *Client) Del(keys ...string) *goja.Promise {
 }
 
 // GetDel gets the value of key and deletes the key.
+//
+// If the key does not exist, the promise is rejected with an error.
 func (c *Client) GetDel(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -263,6 +275,8 @@ func (c *Client) DecrBy(key string, decrement int64) *goja.Promise {
 }
 
 // RandomKey returns a random key.
+//
+// If the database is empty, the promise is rejected with an error.
 func (c *Client) RandomKey() *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -332,7 +346,7 @@ func (c *Client) Expire(key string, seconds int) *goja.Promise {
 }
 
 // Ttl returns the remaining time to live of a key that has a timeout.
-// nolint:stylecheck,revive
+//nolint:revive,stylecheck
 func (c *Client) Ttl(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -436,7 +450,10 @@ func (c *Client) Rpush(key string, values ...interface{}) *goja.Promise {
 }
 
 // Lpop removes and returns the first element of the list stored at `key`.
+//
+// If the list does not exist, this command rejects the promise with an error.
 func (c *Client) Lpop(key string) *goja.Promise {
+	// TODO: redis supports indicating the amount of values to pop
 	promise, resolve, reject := c.makeHandledPromise()
 
 	if err := c.connect(); err != nil {
@@ -458,7 +475,10 @@ func (c *Client) Lpop(key string) *goja.Promise {
 }
 
 // Rpop removes and returns the last element of the list stored at `key`.
+//
+// If the list does not exist, this command rejects the promise with an error.
 func (c *Client) Rpop(key string) *goja.Promise {
+	// TODO: redis supports indicating the amount of values to pop
 	promise, resolve, reject := c.makeHandledPromise()
 
 	if err := c.connect(); err != nil {
@@ -507,6 +527,8 @@ func (c *Client) Lrange(key string, start, stop int64) *goja.Promise {
 // Lindex returns the specified element of the list stored at `key`.
 // The index is zero-based. Negative indices can be used to designate
 // elements starting at the tail of the list.
+//
+// If the list does not exist, this command rejects the promise with an error.
 func (c *Client) Lindex(key string, index int64) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -529,6 +551,8 @@ func (c *Client) Lindex(key string, index int64) *goja.Promise {
 }
 
 // Lset sets the list element at `index` to `element`.
+//
+// If the list does not exist, this command rejects the promise with an error.
 func (c *Client) Lset(key string, index int64, element string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -554,6 +578,8 @@ func (c *Client) Lset(key string, index int64, element string) *goja.Promise {
 // at `key`. If `count` is positive, elements are removed from the beginning of the list.
 // If `count` is negative, elements are removed from the end of the list.
 // If `count` is zero, all elements matching `value` are removed.
+//
+// If the list does not exist, this command rejects the promise with an error.
 func (c *Client) Lrem(key string, count int64, value string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -577,6 +603,8 @@ func (c *Client) Lrem(key string, count int64, value string) *goja.Promise {
 
 // Llen returns the length of the list stored at `key`. If `key`
 // does not exist, it is interpreted as an empty list and 0 is returned.
+//
+// If the list does not exist, this command rejects the promise with an error.
 func (c *Client) Llen(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -601,6 +629,8 @@ func (c *Client) Llen(key string) *goja.Promise {
 // Hset sets the specified field in the hash stored at `key` to `value`.
 // If the `key` does not exist, a new key holding a hash is created.
 // If `field` already exists in the hash, it is overwritten.
+//
+// If the hash does not exist, this command rejects the promise with an error.
 func (c *Client) Hset(key string, field string, value interface{}) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -653,6 +683,8 @@ func (c *Client) Hsetnx(key, field, value string) *goja.Promise {
 }
 
 // Hget returns the value associated with `field` in the hash stored at `key`.
+//
+// If the hash does not exist, this command rejects the promise with an error.
 func (c *Client) Hget(key, field string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -697,6 +729,8 @@ func (c *Client) Hdel(key string, fields ...string) *goja.Promise {
 }
 
 // Hgetall returns all fields and values of the hash stored at `key`.
+//
+// If the hash does not exist, this command rejects the promise with an error.
 func (c *Client) Hgetall(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -719,6 +753,8 @@ func (c *Client) Hgetall(key string) *goja.Promise {
 }
 
 // Hkeys returns all fields of the hash stored at `key`.
+//
+// If the hash does not exist, this command rejects the promise with an error.
 func (c *Client) Hkeys(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -741,6 +777,8 @@ func (c *Client) Hkeys(key string) *goja.Promise {
 }
 
 // Hvals returns all values of the hash stored at `key`.
+//
+// If the hash does not exist, this command rejects the promise with an error.
 func (c *Client) Hvals(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -763,6 +801,8 @@ func (c *Client) Hvals(key string) *goja.Promise {
 }
 
 // Hlen returns the number of fields in the hash stored at `key`.
+//
+// If the hash does not exist, this command rejects the promise with an error.
 func (c *Client) Hlen(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -917,6 +957,8 @@ func (c *Client) Smembers(key string) *goja.Promise {
 }
 
 // Srandmember returns a random element from the set value stored at key.
+//
+// If the set does not exist, the promise is rejected with an error.
 func (c *Client) Srandmember(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -939,6 +981,8 @@ func (c *Client) Srandmember(key string) *goja.Promise {
 }
 
 // Spop removes and returns a random element from the set value stored at key.
+//
+// If the set does not exist, the promise is rejected with an error.
 func (c *Client) Spop(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
 
@@ -1026,21 +1070,32 @@ func (c *Client) connect() error {
 		return common.NewInitContextError("connecting to a redis server in the init context is not supported")
 	}
 
-	if c.redisClient == nil {
-		// If k6 has a TLSConfig set in its state, use
-		// it has redis' client TLSConfig too.
-		if vuState.TLSConfig != nil {
-			c.redisOptions.TLSConfig = vuState.TLSConfig
-		}
-
-		// use k6's lib.DialerContexter function has redis'
-		// client Dialer
-		c.redisOptions.Dialer = vuState.Dialer.DialContext
-
-		c.redisClient = redis.NewUniversalClient(c.redisOptions)
+	// If the redisClient is already instantiated, it is safe
+	// to assume that the connection is already established.
+	if c.redisClient != nil {
+		return nil
 	}
 
+	// If k6 has a TLSConfig set in its state, use
+	// it has redis' client TLSConfig too.
+	if vuState.TLSConfig != nil {
+		c.redisOptions.TLSConfig = vuState.TLSConfig
+	}
+
+	// use k6's lib.DialerContexter function has redis'
+	// client Dialer
+	c.redisOptions.Dialer = vuState.Dialer.DialContext
+
+	// Replace the internal redis client instance with a new
+	// one using our custom options.
+	c.redisClient = redis.NewUniversalClient(c.redisOptions)
+
 	return nil
+}
+
+// IsConnected returns true if the client is connected to redis.
+func (c *Client) IsConnected() bool {
+	return c.redisClient != nil
 }
 
 // isSupportedType returns whether the provided arguments are of a type
@@ -1060,9 +1115,11 @@ func (c *Client) isSupportedType(offset int, args ...interface{}) error {
 	for idx, arg := range args {
 		switch arg.(type) {
 		case string, int, int64, float64, bool:
-			return nil
+			continue
 		default:
-			return fmt.Errorf("unsupported type: %T for argument at index: %d", arg, idx+offset)
+			return fmt.Errorf(
+				"unsupported type provided for argument at index %d, "+
+					"supported types are string, number, and boolean", idx+offset)
 		}
 	}
 
