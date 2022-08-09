@@ -14,12 +14,6 @@ import (
 	"go.k6.io/k6/js/modules"
 )
 
-// Register the extension on module initialization, available to
-// import from JS as "k6/x/redis".
-func init() {
-	modules.Register("k6/x/redis", New())
-}
-
 type (
 	// RootModule is the global module instance that will create Client
 	// instances for each VU.
