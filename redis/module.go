@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/modules"
 )
@@ -83,29 +83,29 @@ func (mi *ModuleInstance) NewClient(call goja.ConstructorCall) *goja.Object {
 	}
 
 	redisOptions := &redis.UniversalOptions{
-		Addrs:              opts.Addrs,
-		DB:                 opts.DB,
-		Username:           opts.Username,
-		Password:           opts.Password,
-		SentinelUsername:   opts.SentinelUsername,
-		SentinelPassword:   opts.SentinelPassword,
-		MasterName:         opts.MasterName,
-		MaxRetries:         opts.MaxRetries,
-		MinRetryBackoff:    time.Duration(opts.MinRetryBackoff) * time.Millisecond,
-		MaxRetryBackoff:    time.Duration(opts.MaxRetryBackoff) * time.Millisecond,
-		DialTimeout:        time.Duration(opts.DialTimeout) * time.Millisecond,
-		ReadTimeout:        time.Duration(opts.ReadTimeout) * time.Millisecond,
-		WriteTimeout:       time.Duration(opts.WriteTimeout) * time.Millisecond,
-		PoolSize:           opts.PoolSize,
-		MinIdleConns:       opts.MinIdleConns,
-		MaxConnAge:         time.Duration(opts.MaxConnAge) * time.Millisecond,
-		PoolTimeout:        time.Duration(opts.PoolTimeout) * time.Millisecond,
-		IdleTimeout:        time.Duration(opts.IdleTimeout) * time.Millisecond,
-		IdleCheckFrequency: time.Duration(opts.IdleCheckFrequency) * time.Millisecond,
-		MaxRedirects:       opts.MaxRedirects,
-		ReadOnly:           opts.ReadOnly,
-		RouteByLatency:     opts.RouteByLatency,
-		RouteRandomly:      opts.RouteRandomly,
+		Addrs:            opts.Addrs,
+		DB:               opts.DB,
+		Username:         opts.Username,
+		Password:         opts.Password,
+		SentinelUsername: opts.SentinelUsername,
+		SentinelPassword: opts.SentinelPassword,
+		MasterName:       opts.MasterName,
+		MaxRetries:       opts.MaxRetries,
+		MinRetryBackoff:  time.Duration(opts.MinRetryBackoff) * time.Millisecond,
+		MaxRetryBackoff:  time.Duration(opts.MaxRetryBackoff) * time.Millisecond,
+		DialTimeout:      time.Duration(opts.DialTimeout) * time.Millisecond,
+		ReadTimeout:      time.Duration(opts.ReadTimeout) * time.Millisecond,
+		WriteTimeout:     time.Duration(opts.WriteTimeout) * time.Millisecond,
+		PoolSize:         opts.PoolSize,
+		MinIdleConns:     opts.MinIdleConns,
+		ConnMaxLifetime:  time.Duration(opts.MaxConnAge) * time.Millisecond,
+		PoolTimeout:      time.Duration(opts.PoolTimeout) * time.Millisecond,
+		ConnMaxIdleTime:  time.Duration(opts.IdleTimeout) * time.Millisecond,
+		// IdleCheckFrequency: time.Duration(opts.IdleCheckFrequency) * time.Millisecond,
+		MaxRedirects:   opts.MaxRedirects,
+		ReadOnly:       opts.ReadOnly,
+		RouteByLatency: opts.RouteByLatency,
+		RouteRandomly:  opts.RouteRandomly,
 	}
 
 	client := &Client{

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/modules"
 )
@@ -346,6 +346,7 @@ func (c *Client) Expire(key string, seconds int) *goja.Promise {
 }
 
 // Ttl returns the remaining time to live of a key that has a timeout.
+//
 //nolint:revive,stylecheck
 func (c *Client) Ttl(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
