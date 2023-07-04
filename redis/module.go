@@ -59,8 +59,11 @@ func (mi *ModuleInstance) Exports() modules.Exports {
 // the internal universal client instance will be one of those.
 //
 // The type of the underlying client depends on the following conditions:
+// If the first argument is a string, it's parsed as a Redis URL, and a
+// single-node Client is used.
+// Otherwise, an object is expected, and depending on its properties:
 // 1. If the MasterName option is specified, a sentinel-backed FailoverClient is used.
-// 2. if the number of Addrs is two or more, a ClusterClient is used.
+// 2. If the number of Addrs is two or more, a ClusterClient is used.
 // 3. Otherwise, a single-node Client is used.
 //
 // To support being instantiated in the init context, while not
@@ -71,15 +74,25 @@ func (mi *ModuleInstance) Exports() modules.Exports {
 func (mi *ModuleInstance) NewClient(call goja.ConstructorCall) *goja.Object {
 	rt := mi.vu.Runtime()
 
-	var optionsArg map[string]interface{}
-	err := rt.ExportTo(call.Arguments[0], &optionsArg)
-	if err != nil {
-		common.Throw(rt, errors.New("unable to parse options object"))
+	if len(call.Arguments) != 1 {
+		common.Throw(rt, errors.New("must specify one argument"))
 	}
 
-	opts, err := newOptionsFrom(optionsArg)
-	if err != nil {
-		common.Throw(rt, fmt.Errorf("invalid options; reason: %w", err))
+	var (
+		opts     *options
+		parseErr error
+	)
+	switch val := call.Arguments[0].Export().(type) {
+	case string:
+		opts, parseErr = newOptionsFromString(val)
+	case map[string]interface{}:
+		opts, parseErr = newOptionsFromObject(val)
+	default:
+		common.Throw(rt, fmt.Errorf("unknown argument type: %T; expected string or object", val))
+	}
+
+	if parseErr != nil {
+		common.Throw(rt, fmt.Errorf("invalid argument; reason: %w", parseErr))
 	}
 
 	redisOptions := &redis.UniversalOptions{
@@ -162,9 +175,9 @@ type options struct {
 	RouteRandomly  bool `json:"routeRandomly,omitempty"`
 }
 
-// newOptionsFrom validates and instantiates an options struct from its map representation
-// as obtained by calling a Goja's Runtime.ExportTo.
-func newOptionsFrom(argument map[string]interface{}) (*options, error) {
+// newOptionsFromObject validates and instantiates an options struct from its
+// map representation as exported from goja.Runtime.
+func newOptionsFromObject(argument map[string]interface{}) (*options, error) {
 	jsonStr, err := json.Marshal(argument)
 	if err != nil {
 		return nil, fmt.Errorf("unable to serialize options to JSON %w", err)
@@ -183,4 +196,31 @@ func newOptionsFrom(argument map[string]interface{}) (*options, error) {
 	}
 
 	return &opts, nil
+}
+
+// newOptionsFromString parses the expected URL into the internal options struct.
+func newOptionsFromString(url string) (*options, error) {
+	opts, err := redis.ParseURL(url)
+	if err != nil {
+		return nil, err
+	}
+
+	return &options{
+		Addrs:              []string{opts.Addr},
+		DB:                 opts.DB,
+		Username:           opts.Username,
+		Password:           opts.Password,
+		MaxRetries:         opts.MaxRetries,
+		MinRetryBackoff:    opts.MinRetryBackoff.Milliseconds(),
+		MaxRetryBackoff:    opts.MaxRetryBackoff.Milliseconds(),
+		DialTimeout:        opts.DialTimeout.Milliseconds(),
+		ReadTimeout:        opts.ReadTimeout.Milliseconds(),
+		WriteTimeout:       opts.WriteTimeout.Milliseconds(),
+		PoolSize:           opts.PoolSize,
+		MinIdleConns:       opts.MinIdleConns,
+		MaxConnAge:         opts.MaxConnAge.Milliseconds(),
+		PoolTimeout:        opts.PoolTimeout.Milliseconds(),
+		IdleTimeout:        opts.IdleTimeout.Milliseconds(),
+		IdleCheckFrequency: opts.IdleCheckFrequency.Milliseconds(),
+	}, nil
 }
