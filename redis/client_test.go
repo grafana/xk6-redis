@@ -19,6 +19,63 @@ import (
 	"gopkg.in/guregu/null.v3"
 )
 
+func TestClientConstructor(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name, arg, expErr string
+	}{
+		{
+			name: "ok/url",
+			arg:  "'redis://%s'",
+		},
+		{
+			name: "ok/object",
+			arg:  "{addrs: ['%s']}",
+		},
+		{
+			name:   "err/empty",
+			arg:    "",
+			expErr: "must specify one argument at <eval>:1:1(1)",
+		},
+		{
+			name:   "err/url",
+			arg:    "'%s'", // missing scheme
+			expErr: "first path segment in URL cannot contain colon at <eval>:1:1(2)",
+		},
+		{
+			name:   "err/object",
+			arg:    "{addr: ['%s']}",
+			expErr: `invalid argument; reason: unable to decode options json: unknown field "addr" at <eval>:1:1(6)`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			ts := newTestSetup(t)
+			rs := RunT(t)
+
+			var arg string
+			if tc.arg != "" {
+				arg = fmt.Sprintf(tc.arg, rs.Addr())
+			}
+			gotScriptErr := ts.ev.Start(func() error {
+				_, err := ts.rt.RunString(fmt.Sprintf("new Client(%s);", arg))
+				return err
+			})
+			if tc.expErr != "" {
+				require.Error(t, gotScriptErr)
+				assert.Contains(t, gotScriptErr.Error(), tc.expErr)
+			} else {
+				assert.NoError(t, gotScriptErr)
+			}
+		})
+	}
+}
+
 func TestClientSet(t *testing.T) {
 	t.Parallel()
 
