@@ -21,11 +21,49 @@ export const options = {
   },
 };
 
-// Instantiate a new redis client
-const redisClient = new redis.Client({
-  addrs: __ENV.REDIS_ADDRS.split(",") || new Array("localhost:6379"), // in the form of "host:port", separated by commas
-  password: __ENV.REDIS_PASSWORD || "",
-});
+// Instantiate a new redis client with a URL
+const redisClient = new redis.Client(`redis://:${__ENV.REDIS_PASSWORD}@localhost:6379`);
+
+// A single-node client configured with an object
+// const redisClient = new redis.Client({
+//   socket: {
+//     host: 'localhost',
+//     port: 6379,
+//   },
+//   password: __ENV.REDIS_PASSWORD,
+// });
+
+// A cluster client configured with node URLs
+// const client = new redis.Client({
+//   cluster: {
+//     nodes: [
+//       `redis://:${__ENV.REDIS_PASSWORD}@host1:6379',
+//       `redis://:${__ENV.REDIS_PASSWORD}@host2:6379',
+//     ]
+//   }
+// });
+
+// A cluster client configured with node objects
+// const redisClient = new redis.Client({
+//   cluster: {
+//     nodes: [
+//       {
+//         socket: {
+//           host: 'host1',
+//           port: 6379,
+//         },
+//         password: __ENV.REDIS_PASSWORD,
+//       },
+//       {
+//         socket: {
+//           host: 'host2',
+//           port: 6379,
+//         },
+//         password: __ENV.REDIS_PASSWORD,
+//       }
+//     ]
+//   }
+// });
 
 // Prepare an array of crocodile ids for later use
 // in the context of the measureUsingRedisData function.
