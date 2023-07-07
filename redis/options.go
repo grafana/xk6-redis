@@ -2,6 +2,8 @@ package redis
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -35,9 +37,10 @@ type socketOptions struct {
 }
 
 type tlsOptions struct {
-	CA   []byte `json:"ca,omitempty"`
-	Cert []byte `json:"cert,omitempty"`
-	Key  []byte `json:"key,omitempty"`
+	// TODO: Handle binary data (ArrayBuffer) for all these as well.
+	CA   []string `json:"ca,omitempty"`
+	Cert string   `json:"cert,omitempty"`
+	Key  string   `json:"key,omitempty"`
 }
 
 type commonClusterSentinelOptions struct {
@@ -147,6 +150,10 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			if err := setSocketOptions(universalOpts, n.Socket); err != nil {
+				return nil, err
+			}
 		}
 	case *clusterNodesStringOptions:
 		universalOpts = &redis.UniversalOptions{
@@ -177,7 +184,9 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 			MinRetryBackoff: time.Duration(o.MinRetryBackoff) * time.Millisecond,
 			MaxRetryBackoff: time.Duration(o.MaxRetryBackoff) * time.Millisecond,
 		}
-		setSocketOptions(universalOpts, o.Socket)
+		if err := setSocketOptions(universalOpts, o.Socket); err != nil {
+			return nil, err
+		}
 	case *redis.Options:
 		universalOpts = &redis.UniversalOptions{
 			Protocol:        2,
@@ -204,7 +213,7 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 	return universalOpts, nil
 }
 
-func setSocketOptions(opts *redis.UniversalOptions, sopts *socketOptions) {
+func setSocketOptions(opts *redis.UniversalOptions, sopts *socketOptions) error {
 	opts.Addrs = []string{fmt.Sprintf("%s:%d", sopts.Host, sopts.Port)}
 	opts.DialTimeout = time.Duration(sopts.DialTimeout) * time.Millisecond
 	opts.ReadTimeout = time.Duration(sopts.ReadTimeout) * time.Millisecond
@@ -214,6 +223,29 @@ func setSocketOptions(opts *redis.UniversalOptions, sopts *socketOptions) {
 	opts.ConnMaxLifetime = time.Duration(sopts.MaxConnAge) * time.Millisecond
 	opts.PoolTimeout = time.Duration(sopts.PoolTimeout) * time.Millisecond
 	opts.ConnMaxIdleTime = time.Duration(sopts.IdleTimeout) * time.Millisecond
+
+	if sopts.TLS != nil {
+		tlsCfg := &tls.Config{}
+		if len(sopts.TLS.CA) > 0 {
+			caCertPool := x509.NewCertPool()
+			for _, cert := range sopts.TLS.CA {
+				caCertPool.AppendCertsFromPEM([]byte(cert))
+			}
+			tlsCfg.RootCAs = caCertPool
+		}
+
+		if sopts.TLS.Cert != "" && sopts.TLS.Key != "" {
+			clientCertPair, err := tls.X509KeyPair([]byte(sopts.TLS.Cert), []byte(sopts.TLS.Key))
+			if err != nil {
+				return err
+			}
+			tlsCfg.Certificates = []tls.Certificate{clientCertPair}
+		}
+
+		opts.TLSConfig = tlsCfg
+	}
+
+	return nil
 }
 
 // Set UniversalOption values from single-node options, ensuring that any

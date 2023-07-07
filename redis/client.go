@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"crypto/tls"
 	"fmt"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/modules"
+	"go.k6.io/k6/lib/netext"
 )
 
 // Client represents the Client constructor (i.e. `new redis.Client()`) and
@@ -1077,15 +1079,43 @@ func (c *Client) connect() error {
 		return nil
 	}
 
-	// If k6 has a TLSConfig set in its state, use
-	// it has redis' client TLSConfig too.
-	if vuState.TLSConfig != nil {
-		c.redisOptions.TLSConfig = vuState.TLSConfig
-	}
+	tlsCfg := c.redisOptions.TLSConfig
+	if tlsCfg != nil {
+		if vuState.TLSConfig != nil {
+			// Merge k6 TLS configuration with the one we received from the
+			// Client constructor. This will need adjusting depending on which
+			// options we want to expose in the Redis module, and how we want
+			// the override to work.
+			tlsCfg.InsecureSkipVerify = vuState.TLSConfig.InsecureSkipVerify
+			tlsCfg.CipherSuites = vuState.TLSConfig.CipherSuites
+			tlsCfg.MinVersion = vuState.TLSConfig.MinVersion
+			tlsCfg.MaxVersion = vuState.TLSConfig.MaxVersion
+			tlsCfg.Renegotiation = vuState.TLSConfig.Renegotiation
+			tlsCfg.KeyLogWriter = vuState.TLSConfig.KeyLogWriter
 
-	// use k6's lib.DialerContexter function has redis'
-	// client Dialer
-	c.redisOptions.Dialer = vuState.Dialer.DialContext
+			tlsCfg.Certificates = append(tlsCfg.Certificates, vuState.TLSConfig.Certificates...)
+			//nolint:staticcheck // ignore SA1019 This was deprecated, but k6 still supports it.
+			tlsCfg.NameToCertificate = vuState.TLSConfig.NameToCertificate
+
+			// TODO: Merge vuState.TLSConfig.RootCAs with
+			// c.redisOptions.TLSConfig. k6 currently doesn't allow setting
+			// this, so it doesn't matter right now, but these should be merged.
+			// I couldn't find a way to do this with the x509.CertPool API
+			// though...
+		}
+
+		k6dialer, ok := vuState.Dialer.(*netext.Dialer)
+		if !ok {
+			panic(fmt.Sprintf("expected *netext.Dialer, got: %T", vuState.Dialer))
+		}
+		tlsDialer := &tls.Dialer{
+			NetDialer: &k6dialer.Dialer,
+			Config:    tlsCfg,
+		}
+		c.redisOptions.Dialer = tlsDialer.DialContext
+	} else {
+		c.redisOptions.Dialer = vuState.Dialer.DialContext
+	}
 
 	// Replace the internal redis client instance with a new
 	// one using our custom options.
