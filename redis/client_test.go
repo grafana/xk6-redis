@@ -26,27 +26,32 @@ func TestClientConstructor(t *testing.T) {
 		name, arg, expErr string
 	}{
 		{
-			name: "ok/url",
+			name: "ok/url/tcp",
 			arg:  "'redis://%s'",
 		},
 		{
-			name: "ok/object",
-			arg:  "{addrs: ['%s']}",
+			name: "ok/url/tls",
+			arg:  "'rediss://%s'",
 		},
 		{
 			name:   "err/empty",
 			arg:    "",
-			expErr: "must specify one argument at <eval>:1:1(1)",
+			expErr: "must specify one argument",
 		},
 		{
-			name:   "err/url",
-			arg:    "'%s'", // missing scheme
-			expErr: "first path segment in URL cannot contain colon at <eval>:1:1(2)",
+			name:   "err/url/missing_scheme",
+			arg:    "'%s'",
+			expErr: "first path segment in URL cannot contain colon",
 		},
 		{
-			name:   "err/object",
-			arg:    "{addr: ['%s']}",
-			expErr: `invalid argument; reason: unable to decode options json: unknown field "addr" at <eval>:1:1(6)`,
+			name:   "err/url/invalid_scheme",
+			arg:    "'https://%s'",
+			expErr: "invalid options; reason: redis: invalid URL scheme: https",
+		},
+		{
+			name:   "err/object/unknown_field",
+			arg:    "{addrs: ['%s']}",
+			expErr: `invalid options; reason: json: unknown field "addrs"`,
 		},
 	}
 
@@ -100,9 +105,7 @@ func TestClientSet(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.set("existing_key", "new_value")
 				.then(res => { if (res !== "OK") { throw 'unexpected value for set result: ' + res } })
@@ -151,9 +154,7 @@ func TestClientGet(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.get("existing_key")
 				.then(res => { if (res !== "old_value") { throw 'unexpected value for get result: ' + res } })
@@ -197,9 +198,7 @@ func TestClientGetSet(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.getSet("existing_key", "new_value")
 				.then(res => { if (res !== "old_value") { throw 'unexpected value for getSet result: ' + res } })
@@ -240,9 +239,7 @@ func TestClientDel(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.del("key1", "key2", "nonexisting_key")
 				.then(res => { if (res !== 2) { throw 'unexpected value for del result: ' + res } })
@@ -280,9 +277,7 @@ func TestClientGetDel(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.getDel("existing_key")
 				.then(res => { if (res !== "old_value") { throw 'unexpected value for getDel result: ' + res } })
@@ -321,9 +316,7 @@ func TestClientExists(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.exists("existing_key", "nonexisting_key")
 				.then(res => { if (res !== 1) { throw 'unexpected value for exists result: ' + res } })
@@ -363,9 +356,7 @@ func TestClientIncr(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.incr("existing_key")
 				.then(res => { if (res !== 11) { throw 'unexpected value for existing key incr result: ' + res } })
@@ -414,9 +405,7 @@ func TestClientIncrBy(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.incrBy("existing_key", 10)
 				.then(res => { if (res !== 20) { throw 'unexpected value for incrBy result: ' + res } })
@@ -459,9 +448,7 @@ func TestClientDecr(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.decr("existing_key")
 				.then(res => { if (res !== 9) { throw 'unexpected value for decr result: ' + res } })
@@ -510,9 +497,7 @@ func TestClientDecrBy(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.decrBy("existing_key", 2)
 				.then(res => { if (res !== 8) { throw 'unexpected value for decrBy result: ' + res } })
@@ -556,9 +541,7 @@ func TestClientRandomKey(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.randomKey()
 				.then(
@@ -597,9 +580,7 @@ func TestClientMget(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.mget("existing_key", "non_existing_key")
 				.then(
@@ -643,9 +624,7 @@ func TestClientExpire(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.expire("expires_key", 10)
 				.then(res => { if (res !== true) { throw 'unexpected value for expire result: ' + res } })
@@ -686,9 +665,7 @@ func TestClientTTL(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.ttl("expires_key")
 				.then(res => { if (res !== 10) { throw 'unexpected value for expire result: ' + res } })
@@ -729,9 +706,7 @@ func TestClientPersist(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.persist("expires_key")
 				.then(res => { if (res !== true) { throw 'unexpected value for expire result: ' + res } })
@@ -775,9 +750,7 @@ func TestClientLPush(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lpush("existing_list", "second", "first")
 				.then(res => { if (res !== 3) { throw 'unexpected value for lpush result: ' + res } })
@@ -821,9 +794,7 @@ func TestClientRPush(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.rpush("existing_list", "second", "third")
 				.then(res => { if (res !== 3) { throw 'unexpected value for rpush result: ' + res } })
@@ -866,9 +837,7 @@ func TestClientLPop(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lpop("existing_list")
 				.then(res => { if (res !== "first") { throw 'unexpected value for lpop first result: ' + res } })
@@ -919,9 +888,7 @@ func TestClientRPop(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.rpop("existing_list")
 				.then(res => { if (res !== "second") { throw 'unexpected value for rpop result: ' + res }})
@@ -984,9 +951,7 @@ func TestClientLRange(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lrange("existing_list", 0, 0)
 				.then(res => { if (res.length !== 1 || res[0] !== "first") { throw 'unexpected value for lrange result: ' + res }})
@@ -1050,9 +1015,7 @@ func TestClientLIndex(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lindex("existing_list", 0)
 				.then(res => { if (res !== "first") { throw 'unexpected value for lindex result: ' + res } })
@@ -1110,9 +1073,7 @@ func TestClientClientLSet(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lset("existing_list", 0, "new_first")
 				.then(res => { if (res !== "OK") { throw 'unexpected value for lset result: ' + res }})
@@ -1158,9 +1119,7 @@ func TestClientLrem(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lrem("existing_list", 1, "first")
 				.then(() => redis.lrem("existing_list", 0, "second"))
@@ -1207,9 +1166,7 @@ func TestClientLlen(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.llen("existing_list")
 				.then(res => { if (res !== 3) { throw 'unexpected value for llen result: ' + res } })
@@ -1255,9 +1212,7 @@ func TestClientHSet(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hset("existing_hash", "key", "value")
 				.then(res => { if (res !== 1) { throw 'unexpected value for hset result: ' + res } })
@@ -1311,9 +1266,7 @@ func TestClientHsetnx(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hsetnx("existing_hash", "key", "value")
 				.then(res => { if (res !== true) { throw 'unexpected value for hsetnx result: ' + res } })
@@ -1357,9 +1310,7 @@ func TestClientHget(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hget("existing_hash", "foo")
 				.then(res => { if (res !== "bar") { throw 'unexpected value for hget result: ' + res } })
@@ -1403,9 +1354,7 @@ func TestClientHdel(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hdel("existing_hash", "foo")
 				.then(res => { if (res !== 1) { throw 'unexpected value for hdel result: ' + res } })
@@ -1449,9 +1398,7 @@ func TestClientHgetall(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hgetall("existing_hash")
 				.then(res => { if (typeof res !== "object" || res['foo'] !== 'bar') { throw 'unexpected value for hgetall result: ' + res } })
@@ -1495,9 +1442,7 @@ func TestClientHkeys(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hkeys("existing_hash")
 				.then(res => { if (res.length !== 1 || res[0] !== 'foo') { throw 'unexpected value for hkeys result: ' + res } })
@@ -1541,9 +1486,7 @@ func TestClientHvals(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hvals("existing_hash")
 				.then(res => { if (res.length !== 1 || res[0] !== 'bar') { throw 'unexpected value for hvals result: ' + res } })
@@ -1587,9 +1530,7 @@ func TestClientHlen(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hlen("existing_hash")
 				.then(res => { if (res !== 1) { throw 'unexpected value for hlen result: ' + res } })
@@ -1642,9 +1583,7 @@ func TestClientHincrby(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hincrby("existing_hash", "foo", 1)
 				.then(res => { if (res !== 2) { throw 'unexpected value for hincrby result: ' + res } })
@@ -1695,9 +1634,7 @@ func TestClientSadd(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.sadd("existing_set", "bar")
 				.then(res => { if (res !== 1) { throw 'unexpected value for sadd result: ' + res } })
@@ -1748,9 +1685,7 @@ func TestClientSrem(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.srem("existing_set", "foo")
 				.then(res => { if (res !== 1) { throw 'unexpected value for srem result: ' + res } })
@@ -1802,9 +1737,7 @@ func TestClientSismember(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.sismember("existing_set", "foo")
 				.then(res => { if (res !== true) { throw 'unexpected value for sismember result: ' + res } })
@@ -1848,9 +1781,7 @@ func TestClientSmembers(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.smembers("existing_set")
 				.then(res => { if (res.length !== 2 || 'foo' in res || 'bar' in res) { throw 'unexpected value for smembers result: ' + res } })
@@ -1891,9 +1822,7 @@ func TestClientSrandmember(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.srandmember("existing_set")
 				.then(res => { if (res !== 'foo' && res !== 'bar') { throw 'unexpected value for srandmember result: ' + res} })
@@ -1937,9 +1866,7 @@ func TestClientSpop(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.spop("existing_set")
 				.then(res => { if (res !== 'foo' && res !== 'bar') { throw 'unexpected value for spop result: ' + res} })
@@ -1985,9 +1912,7 @@ func TestClientSendCommand(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.sendCommand("sadd", "existing_set", "foo")
 				.then(res => { if (res !== 1) { throw 'unexpected value for sadd result: ' + res } })
@@ -2191,9 +2116,7 @@ func TestClientCommandsInInitContext(t *testing.T) {
 
 			gotScriptErr := ts.ev.Start(func() error {
 				_, err := ts.rt.RunString(fmt.Sprintf(`
-				const redis = new Client({
-					addrs: new Array("unreachable:42424"),
-				});
+				const redis = new Client('redis://unreachable:42424');
 
 				%s.then(res => { throw 'expected to fail when called in the init context' })
 			`, tc.statement))
@@ -2389,9 +2312,7 @@ func TestClientCommandsAgainstUnreachableServer(t *testing.T) {
 
 			gotScriptErr := ts.ev.Start(func() error {
 				_, err := ts.rt.RunString(fmt.Sprintf(`
-				const redis = new Client({
-					addrs: new Array("unreachable:42424"),
-				});
+				const redis = new Client('redis://unreachable:42424');
 
 				%s.then(res => { throw 'expected to fail when server is unreachable' })
 			`, tc.statement))
