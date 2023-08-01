@@ -346,6 +346,7 @@ func (c *Client) Expire(key string, seconds int) *goja.Promise {
 }
 
 // Ttl returns the remaining time to live of a key that has a timeout.
+//
 //nolint:revive,stylecheck
 func (c *Client) Ttl(key string) *goja.Promise {
 	promise, resolve, reject := c.makeHandledPromise()
