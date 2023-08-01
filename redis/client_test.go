@@ -2097,7 +2097,7 @@ func TestClientCommandsInInitContext(t *testing.T) {
 				const redis = new Client({
 					addrs: new Array("unreachable:42424"),
 				});
-	
+
 				%s.then(res => { throw 'expected to fail when called in the init context' })
 			`, tc.statement))
 
@@ -2295,7 +2295,7 @@ func TestClientCommandsAgainstUnreachableServer(t *testing.T) {
 				const redis = new Client({
 					addrs: new Array("unreachable:42424"),
 				});
-	
+
 				%s.then(res => { throw 'expected to fail when server is unreachable' })
 			`, tc.statement))
 
@@ -2443,12 +2443,11 @@ func newTestSetup(t testing.TB) testSetup {
 		Samples:        samples,
 		TLSConfig:      tb.TLSClientConfig,
 		BuiltinMetrics: metrics.RegisterBuiltinMetrics(metrics.NewRegistry()),
-		Tags:           lib.NewTagMap(nil),
+		Tags:           lib.NewVUStateTags(metrics.NewRegistry().RootTagSet()),
 	}
 
 	vu := &modulestest.VU{
 		CtxField:     tb.Context,
-		InitEnvField: &common.InitEnvironment{},
 		RuntimeField: rt,
 		StateField:   state,
 	}
