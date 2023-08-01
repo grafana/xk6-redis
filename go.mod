@@ -1,6 +1,6 @@
 module github.com/grafana/xk6-redis
 
-go 1.17
+go 1.19
 
 require (
 	github.com/dop251/goja v0.0.0-20230707174833-636fdf960de1
