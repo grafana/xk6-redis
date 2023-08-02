@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/dop251/goja v0.0.0-20230707174833-636fdf960de1
-	github.com/go-redis/redis/v8 v8.11.5
+	github.com/redis/go-redis/v9 v9.0.5
 	github.com/stretchr/testify v1.8.4
 	go.k6.io/k6 v0.45.0
 	gopkg.in/guregu/null.v3 v3.5.0
@@ -15,7 +15,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/dlclark/regexp2 v1.10.0 // indirect
+	github.com/dlclark/regexp2 v1.9.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4-0.20211119122758-180fcef48034+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -29,6 +29,7 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mccutchen/go-httpbin v1.1.2-0.20190116014521-c5cb2f4802fa // indirect
 	github.com/mstoykov/atlas v0.0.0-20220811071828-388f114305dd // indirect
+	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/onsi/gomega v1.20.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect

@@ -66,6 +66,7 @@ func TestClientSet(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"SET", "existing_key", "new_value"},
 		{"SET", "non_existing_key", "some_value"},
 		{"SET", "expires", "expired", "ex", "10"},
@@ -112,6 +113,7 @@ func TestClientGet(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"GET", "existing_key"},
 		{"GET", "non_existing_key"},
 	}, rs.GotCommands())
@@ -159,6 +161,7 @@ func TestClientGetSet(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"GETSET", "existing_key", "new_value"},
 		{"GETSET", "non_existing_key", "some_value"},
 	}, rs.GotCommands())
@@ -194,6 +197,7 @@ func TestClientDel(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 1, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"DEL", "key1", "key2", "nonexisting_key"},
 	}, rs.GotCommands())
 }
@@ -238,6 +242,7 @@ func TestClientGetDel(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"GETDEL", "existing_key"},
 		{"GETDEL", "non_existing_key"},
 	}, rs.GotCommands())
@@ -273,6 +278,7 @@ func TestClientExists(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 1, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"EXISTS", "existing_key", "nonexisting_key"},
 	}, rs.GotCommands())
 }
@@ -316,6 +322,7 @@ func TestClientIncr(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"INCR", "existing_key"},
 		{"INCR", "non_existing_key"},
 	}, rs.GotCommands())
@@ -366,6 +373,7 @@ func TestClientIncrBy(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"INCRBY", "existing_key", "10"},
 		{"INCRBY", "non_existing_key", "10"},
 	}, rs.GotCommands())
@@ -410,6 +418,7 @@ func TestClientDecr(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"DECR", "existing_key"},
 		{"DECR", "non_existing_key"},
 	}, rs.GotCommands())
@@ -460,6 +469,7 @@ func TestClientDecrBy(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"DECRBY", "existing_key", "2"},
 		{"DECRBY", "non_existing_key", "2"},
 	}, rs.GotCommands())
@@ -508,6 +518,7 @@ func TestClientRandomKey(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"RANDOMKEY"},
 		{"RANDOMKEY"},
 	}, rs.GotCommands())
@@ -549,6 +560,7 @@ func TestClientMget(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 1, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"MGET", "existing_key", "non_existing_key"},
 	}, rs.GotCommands())
 }
@@ -590,6 +602,7 @@ func TestClientExpire(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"EXPIRE", "expires_key", "10"},
 		{"EXPIRE", "non_existing_key", "1"},
 	}, rs.GotCommands())
@@ -632,6 +645,7 @@ func TestClientTTL(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"TTL", "expires_key"},
 		{"TTL", "non_existing_key"},
 	}, rs.GotCommands())
@@ -674,6 +688,7 @@ func TestClientPersist(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"PERSIST", "expires_key"},
 		{"PERSIST", "non_existing_key"},
 	}, rs.GotCommands())
@@ -719,6 +734,7 @@ func TestClientLPush(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"LPUSH", "existing_list", "second", "first"},
 		{"LPUSH", "new_list", "1"},
 	}, rs.GotCommands())
@@ -764,6 +780,7 @@ func TestClientRPush(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"RPUSH", "existing_list", "second", "third"},
 		{"RPUSH", "new_list", "1"},
 	}, rs.GotCommands())
@@ -815,6 +832,7 @@ func TestClientLPop(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"LPOP", "existing_list"},
 		{"LPOP", "existing_list"},
 		{"LPOP", "non_existing_list"},
@@ -867,6 +885,7 @@ func TestClientRPop(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"RPOP", "existing_list"},
 		{"RPOP", "existing_list"},
 		{"RPOP", "non_existing_list"},
@@ -932,6 +951,7 @@ func TestClientLRange(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"LRANGE", "existing_list", "0", "0"},
 		{"LRANGE", "existing_list", "0", "1"},
 		{"LRANGE", "existing_list", "-2", "2"},
@@ -997,6 +1017,7 @@ func TestClientLIndex(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"LINDEX", "existing_list", "0"},
 		{"LINDEX", "existing_list", "3"},
 		{"LINDEX", "non_existing_list", "0"},
@@ -1052,6 +1073,7 @@ func TestClientClientLSet(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"LSET", "existing_list", "0", "new_first"},
 		{"LSET", "existing_list", "0", "overridden_value"},
 		{"LSET", "non_existing_list", "0", "new_first"},
@@ -1100,6 +1122,7 @@ func TestClientLrem(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"LREM", "existing_list", "1", "first"},
 		{"LREM", "existing_list", "0", "second"},
 		{"LREM", "non_existing_list", "2", "third"},
@@ -1148,6 +1171,7 @@ func TestClientLlen(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"LLEN", "existing_list"},
 		{"LLEN", "non_existing_list"},
 	}, rs.GotCommands())
@@ -1195,6 +1219,7 @@ func TestClientHSet(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"HSET", "existing_hash", "key", "value"},
 		{"HSET", "existing_hash", "fou", "barre"},
 		{"HSET", "non_existing_hash", "cle", "valeur"},
@@ -1247,6 +1272,7 @@ func TestClientHsetnx(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"HSETNX", "existing_hash", "key", "value"},
 		{"HSETNX", "existing_hash", "foo", "barre"},
 		{"HSETNX", "non_existing_hash", "key", "value"},
@@ -1293,6 +1319,7 @@ func TestClientHget(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"HGET", "existing_hash", "foo"},
 		{"HGET", "non_existing_hash", "key"},
 	}, rs.GotCommands())
@@ -1337,6 +1364,7 @@ func TestClientHdel(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"HDEL", "existing_hash", "foo"},
 		{"HDEL", "existing_hash", "non_existing_key"},
 		{"HDEL", "non_existing_hash", "key"},
@@ -1383,6 +1411,7 @@ func TestClientHgetall(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"HGETALL", "existing_hash"},
 		{"HGETALL", "non_existing_hash"},
 	}, rs.GotCommands())
@@ -1428,6 +1457,7 @@ func TestClientHkeys(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"HKEYS", "existing_hash"},
 		{"HKEYS", "non_existing_hash"},
 	}, rs.GotCommands())
@@ -1473,6 +1503,7 @@ func TestClientHvals(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"HVALS", "existing_hash"},
 		{"HVALS", "non_existing_hash"},
 	}, rs.GotCommands())
@@ -1518,6 +1549,7 @@ func TestClientHlen(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"HLEN", "existing_hash"},
 		{"HLEN", "non_existing_hash"},
 	}, rs.GotCommands())
@@ -1571,6 +1603,7 @@ func TestClientHincrby(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"HINCRBY", "existing_hash", "foo", "1"},
 		{"HINCRBY", "existing_hash", "foo", "-1"},
 		{"HINCRBY", "non_existing_hash", "foo", "1"},
@@ -1623,6 +1656,7 @@ func TestClientSadd(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"SADD", "existing_set", "bar"},
 		{"SADD", "existing_set", "bar"},
 		{"SADD", "non_existing_set", "foo"},
@@ -1677,6 +1711,7 @@ func TestClientSrem(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 4, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"SREM", "existing_set", "foo"},
 		{"SREM", "existing_set", "foo"},
 		{"SREM", "existing_set", "doesnotexist"},
@@ -1728,6 +1763,7 @@ func TestClientSismember(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 3, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"SISMEMBER", "existing_set", "foo"},
 		{"SISMEMBER", "existing_set", "bar"},
 		{"SISMEMBER", "non_existing_set", "foo"},
@@ -1771,6 +1807,7 @@ func TestClientSmembers(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"SMEMBERS", "existing_set"},
 		{"SMEMBERS", "non_existing_set"},
 	}, rs.GotCommands())
@@ -1816,6 +1853,7 @@ func TestClientSrandmember(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"SRANDMEMBER", "existing_set"},
 		{"SRANDMEMBER", "non_existing_set"},
 	}, rs.GotCommands())
@@ -1861,6 +1899,7 @@ func TestClientSpop(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"SPOP", "existing_set"},
 		{"SPOP", "non_existing_set"},
 	}, rs.GotCommands())
@@ -1906,6 +1945,7 @@ func TestClientSendCommand(t *testing.T) {
 	assert.NoError(t, gotScriptErr)
 	assert.Equal(t, 2, rs.HandledCommandsCount())
 	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
 		{"SADD", "existing_set", "foo"},
 		{"SADD", "existing_set", "foo"},
 	}, rs.GotCommands())
