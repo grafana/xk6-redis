@@ -6,7 +6,7 @@ require (
 	github.com/dop251/goja v0.0.0-20230707174833-636fdf960de1
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/stretchr/testify v1.8.4
-	go.k6.io/k6 v0.45.0
+	go.k6.io/k6 v0.45.1
 	gopkg.in/guregu/null.v3 v3.5.0
 )
 
