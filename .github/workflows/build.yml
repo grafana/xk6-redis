@@ -1,0 +1,42 @@
+name: build
+on:
+  # Enable manually triggering this workflow via the API or web UI
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.19.x
+
+      - name: Build using the Go compiler and the -race option
+        run: go build -race ./...
+
+  xk6-build:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.19.x
+
+      - name: Build using xk6
+        run: |
+          go install go.k6.io/xk6/cmd/xk6@latest
+          xk6 build --with github.com/grafana/xk6-redis

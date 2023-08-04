@@ -1,4 +1,4 @@
-name: CI
+name: Test
 on:
   # Enable manually triggering this workflow via the API or web UI
   workflow_dispatch:
@@ -17,12 +17,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Install Go
-        uses: actions/setup-go@v2
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
         with:
-          go-version: 1.x
+          go-version: 1.19.x
+
       - name: Run tests
         run: |
           set -x
