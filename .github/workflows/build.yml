@@ -5,8 +5,6 @@ on:
   push:
     branches:
       - main
-    tags:
-      - v*
   pull_request:
 
 defaults:
@@ -34,7 +32,7 @@ jobs:
 
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
 
       - name: Build using xk6
         run: |
