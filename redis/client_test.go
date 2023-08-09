@@ -2446,6 +2446,12 @@ func newTestSetup(t testing.TB) testSetup {
 
 	samples := make(chan metrics.SampleContainer, 1000)
 
+	// We use self-signed TLS certificates for some tests, and need to disable
+	// strict verification. Since we don't use the k6 js.Runner, we can't set
+	// the k6 option InsecureSkipTLSVerify for this, and must override it in the
+	// TLS config we use from HTTPMultiBin.
+	tb.TLSClientConfig.InsecureSkipVerify = true
+
 	state := &lib.State{
 		Group:  root,
 		Dialer: tb.Dialer,
@@ -2515,4 +2521,39 @@ func newInitContextTestSetup(t testing.TB) testSetup {
 		samples: samples,
 		ev:      ev,
 	}
+}
+
+func TestClientTLS(t *testing.T) {
+	t.Parallel()
+
+	ts := newTestSetup(t)
+	rs := RunTSecure(t, nil)
+
+	err := ts.rt.Set("caCert", string(rs.TLSCertificate()))
+	require.NoError(t, err)
+
+	gotScriptErr := ts.ev.Start(func() error {
+		_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				socket: {
+					host: '%s',
+					port: %d,
+					tls: {
+						ca: [caCert],
+					}
+				}
+			});
+
+			redis.sendCommand("PING");
+		`, rs.Addr().IP.String(), rs.Addr().Port))
+
+		return err
+	})
+
+	require.NoError(t, gotScriptErr)
+	assert.Equal(t, 1, rs.HandledCommandsCount())
+	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
+		{"PING"},
+	}, rs.GotCommands())
 }
