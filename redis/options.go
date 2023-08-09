@@ -213,6 +213,13 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 func setConsistentOptions(uopts *redis.UniversalOptions, opts *redis.Options) error {
 	uopts.Addrs = append(uopts.Addrs, opts.Addr)
 
+	// Only set the TLS config once. Note that this assumes the same config is
+	// used in other single-node options, since doing the consistency check we
+	// use for the other options would be tedious.
+	if uopts.TLSConfig == nil && opts.TLSConfig != nil {
+		uopts.TLSConfig = opts.TLSConfig
+	}
+
 	if uopts.DB != 0 && opts.DB != 0 && uopts.DB != opts.DB {
 		return fmt.Errorf("inconsistent db option: %d != %d", uopts.DB, opts.DB)
 	}
