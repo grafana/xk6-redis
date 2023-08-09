@@ -2,6 +2,7 @@ package redis
 
 import (
 	"bufio"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net"
@@ -12,11 +13,24 @@ import (
 	"unicode"
 )
 
-// RunT starts a new redis stub for a given test context.
+// RunT starts a new redis stub TCP server for a given test context.
 // It registers the test cleanup after your test is done.
 func RunT(t testing.TB) *StubServer {
 	s := NewStubServer()
-	if err := s.Start(); err != nil {
+	if err := s.Start(false); err != nil {
+		t.Fatalf("could not start RedisStub; reason: %s", err)
+	}
+
+	t.Cleanup(s.Close)
+
+	return s
+}
+
+// RunTSecure starts a new redis stub TLS server for a given test context.
+// It registers the test cleanup after your test is done.
+func RunTSecure(t testing.TB) *StubServer {
+	s := NewStubServer()
+	if err := s.Start(true); err != nil {
 		t.Fatalf("could not start RedisStub; reason: %s", err)
 	}
 
@@ -50,6 +64,8 @@ type StubServer struct {
 	handlers          map[string]func(*Connection, []string)
 	processedCommands int
 	commandsHistory   [][]string
+
+	tlsCert []byte
 }
 
 // NewStubServer instantiates a new RedisStub server.
@@ -62,19 +78,46 @@ func NewStubServer() *StubServer {
 	}
 }
 
-// Start starts the RedisStub server.
-func (rs *StubServer) Start() error {
-	listener, err := net.Listen("tcp", net.JoinHostPort("localhost", "0"))
-	if err != nil {
-		return err
+// Start the RedisStub server. If secure is true, a TLS server with a
+// self-signed certificate will be started. Otherwise, an unencrypted TCP
+// server will start.
+func (rs *StubServer) Start(secure bool) error {
+	var (
+		addr     = net.JoinHostPort("localhost", "0")
+		listener net.Listener
+	)
+	if secure { //nolint: nestif
+		// TODO: Generate the cert only once per test run and reuse it, instead
+		// of once per StubServer start?
+		cert, pkey, err := generateTLSCert()
+		if err != nil {
+			return err
+		}
+		rs.tlsCert = cert
+		certPair, err := tls.X509KeyPair(cert, pkey)
+		if err != nil {
+			return err
+		}
+		config := &tls.Config{
+			MinVersion:               tls.VersionTLS13,
+			PreferServerCipherSuites: true,
+			Certificates:             []tls.Certificate{certPair},
+		}
+		if listener, err = tls.Listen("tcp", addr, config); err != nil {
+			return err
+		}
+	} else {
+		var err error
+		if listener, err = net.Listen("tcp", addr); err != nil {
+			return err
+		}
 	}
 
 	rs.listener = listener
 
 	// the provided addr string binds to port zero,
 	// which leads to automatic port selection by the OS.
-	// To catter for this, we parse the listener address
-	// to get the actual port, the OS bound us to.
+	// We need to get the actual port the OS bound us to.
 	boundAddr, ok := listener.Addr().(*net.TCPAddr)
 	if !ok {
 		return errors.New("could not get TCP address")
@@ -140,8 +183,8 @@ func (rs *StubServer) RegisterCommandHandler(command string, handler func(*Conne
 }
 
 // Addr returns the address of the RedisStub server.
-func (rs *StubServer) Addr() string {
-	return rs.boundAddr.String()
+func (rs *StubServer) Addr() *net.TCPAddr {
+	return rs.boundAddr
 }
 
 // HandledCommandsCount returns the total number of commands
@@ -166,6 +209,11 @@ func (rs *StubServer) GotCommands() [][]string {
 	rs.Lock()
 	defer rs.Unlock()
 	return rs.commandsHistory
+}
+
+// TLSCertificate returns the TLS certificate used by the server.
+func (rs *StubServer) TLSCertificate() []byte {
+	return rs.tlsCert
 }
 
 // listenAndServe listens on the redis server's listener,
