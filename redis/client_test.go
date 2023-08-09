@@ -2557,3 +2557,47 @@ func TestClientTLS(t *testing.T) {
 		{"PING"},
 	}, rs.GotCommands())
 }
+
+func TestClientTLSAuth(t *testing.T) {
+	t.Parallel()
+
+	clientCert, clientPKey, err := generateTLSCert()
+	require.NoError(t, err)
+
+	ts := newTestSetup(t)
+	rs := RunTSecure(t, clientCert)
+
+	err = ts.rt.Set("caCert", string(rs.TLSCertificate()))
+	require.NoError(t, err)
+	err = ts.rt.Set("clientCert", string(clientCert))
+	require.NoError(t, err)
+	err = ts.rt.Set("clientPKey", string(clientPKey))
+	require.NoError(t, err)
+
+	gotScriptErr := ts.ev.Start(func() error {
+		_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				socket: {
+					host: '%s',
+					port: %d,
+					tls: {
+						ca: [caCert],
+						cert: clientCert,
+						key: clientPKey
+					}
+				}
+			});
+
+			redis.sendCommand("PING");
+		`, rs.Addr().IP.String(), rs.Addr().Port))
+
+		return err
+	})
+
+	require.NoError(t, gotScriptErr)
+	assert.Equal(t, 1, rs.HandledCommandsCount())
+	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
+		{"PING"},
+	}, rs.GotCommands())
+}
