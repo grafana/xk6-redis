@@ -167,8 +167,7 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 			if err != nil {
 				return nil, err
 			}
-			err = setConsistentOptions(uopts, ropts)
-			if err != nil {
+			if err = setConsistentOptions(uopts, ropts); err != nil {
 				return nil, err
 			}
 		}
@@ -179,12 +178,11 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 		uopts.RouteRandomly = o.RouteRandomly
 
 		for _, n := range o.Nodes {
-			opts, err := redis.ParseURL(n)
+			ropts, err := redis.ParseURL(n)
 			if err != nil {
 				return nil, err
 			}
-			err = setConsistentOptions(uopts, opts)
-			if err != nil {
+			if err = setConsistentOptions(uopts, ropts); err != nil {
 				return nil, err
 			}
 		}
@@ -194,8 +192,7 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = setConsistentOptions(uopts, ropts)
-		if err != nil {
+		if err = setConsistentOptions(uopts, ropts); err != nil {
 			return nil, err
 		}
 	case *redis.Options:
