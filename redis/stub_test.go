@@ -3,6 +3,7 @@ package redis
 import (
 	"bufio"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"net"
@@ -17,7 +18,7 @@ import (
 // It registers the test cleanup after your test is done.
 func RunT(t testing.TB) *StubServer {
 	s := NewStubServer()
-	if err := s.Start(false); err != nil {
+	if err := s.Start(false, nil); err != nil {
 		t.Fatalf("could not start RedisStub; reason: %s", err)
 	}
 
@@ -28,9 +29,11 @@ func RunT(t testing.TB) *StubServer {
 
 // RunTSecure starts a new redis stub TLS server for a given test context.
 // It registers the test cleanup after your test is done.
-func RunTSecure(t testing.TB) *StubServer {
+// Optionally, a client certificate in PEM format can be passed to enable TLS
+// client authentication (mTLS).
+func RunTSecure(t testing.TB, clientCert []byte) *StubServer {
 	s := NewStubServer()
-	if err := s.Start(true); err != nil {
+	if err := s.Start(true, clientCert); err != nil {
 		t.Fatalf("could not start RedisStub; reason: %s", err)
 	}
 
@@ -81,7 +84,9 @@ func NewStubServer() *StubServer {
 // Start the RedisStub server. If secure is true, a TLS server with a
 // self-signed certificate will be started. Otherwise, an unencrypted TCP
 // server will start.
-func (rs *StubServer) Start(secure bool) error {
+// Optionally, a client certificate in PEM format can be passed to enable TLS
+// client authentication (mTLS).
+func (rs *StubServer) Start(secure bool, clientCert []byte) error {
 	var (
 		addr     = net.JoinHostPort("localhost", "0")
 		listener net.Listener
@@ -102,6 +107,12 @@ func (rs *StubServer) Start(secure bool) error {
 			MinVersion:               tls.VersionTLS13,
 			PreferServerCipherSuites: true,
 			Certificates:             []tls.Certificate{certPair},
+		}
+		if clientCert != nil {
+			clientCertPool := x509.NewCertPool()
+			clientCertPool.AppendCertsFromPEM(clientCert)
+			config.ClientCAs = clientCertPool
+			config.ClientAuth = tls.RequireAndVerifyClientCert
 		}
 		if listener, err = tls.Listen("tcp", addr, config); err != nil {
 			return err
