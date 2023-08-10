@@ -27,11 +27,67 @@ func TestClientConstructor(t *testing.T) {
 	}{
 		{
 			name: "ok/url/tcp",
-			arg:  "'redis://%s'",
+			arg:  "'redis://user:pass@localhost:6379/0'",
 		},
 		{
 			name: "ok/url/tls",
-			arg:  "'rediss://%s'",
+			arg:  "'rediss://somesecurehost'",
+		},
+		{
+			name: "ok/object/single",
+			arg: `{
+				username: 'user',
+				password: 'pass',
+				socket: {
+					host: 'localhost',
+					port: 6379,
+				}
+			}`,
+		},
+		{
+			name: "ok/object/single_tls",
+			arg: `{
+				socket: {
+					host: 'localhost',
+					port: 6379,
+					tls: {
+						ca: ['...'],
+					}
+				}
+			}`,
+		},
+		{
+			name: "ok/object/cluster_urls",
+			arg: `{
+				cluster: {
+					nodes: ['redis://host1:6379', 'redis://host2:6379']
+				}
+			}`,
+		},
+		{
+			name: "ok/object/cluster_objects",
+			arg: `{
+				cluster: {
+					nodes: [
+						{
+							username: 'user',
+							password: 'pass',
+							socket: {
+								host: 'host1',
+								port: 6379,
+							},
+						},
+						{
+							username: 'user',
+							password: 'pass',
+							socket: {
+								host: 'host2',
+								port: 6379,
+							},
+						}
+					]
+				}
+			}`,
 		},
 		{
 			name:   "err/empty",
@@ -40,18 +96,79 @@ func TestClientConstructor(t *testing.T) {
 		},
 		{
 			name:   "err/url/missing_scheme",
-			arg:    "'%s'",
-			expErr: "first path segment in URL cannot contain colon",
+			arg:    "'localhost:6379'",
+			expErr: "invalid URL scheme",
 		},
 		{
 			name:   "err/url/invalid_scheme",
-			arg:    "'https://%s'",
+			arg:    "'https://localhost:6379'",
 			expErr: "invalid options; reason: redis: invalid URL scheme: https",
 		},
 		{
 			name:   "err/object/unknown_field",
-			arg:    "{addrs: ['%s']}",
+			arg:    "{addrs: ['localhost:6379']}",
 			expErr: `invalid options; reason: json: unknown field "addrs"`,
+		},
+		{
+			name: "err/object/empty_socket",
+			arg: `{
+				username: 'user',
+				password: 'pass',
+			}`,
+			expErr: "invalid options; reason: empty socket options",
+		},
+		{
+			name: "err/object/cluster_wrong_type",
+			arg: `{
+				cluster: {
+					nodes: 1,
+				}
+			}`,
+			expErr: `invalid options; reason: cluster nodes property must be an array; got int64`,
+		},
+		{
+			name: "err/object/cluster_wrong_type_internal",
+			arg: `{
+				cluster: {
+					nodes: [1, 2],
+				}
+			}`,
+			expErr: `invalid options; reason: cluster nodes array must contain string or object elements; got int64`,
+		},
+		{
+			name: "err/object/cluster_empty",
+			arg: `{
+				cluster: {
+					nodes: []
+				}
+			}`,
+			expErr: `invalid options; reason: cluster nodes property cannot be empty`,
+		},
+		{
+			name: "err/object/cluster_inconsistent_option",
+			arg: `{
+				cluster: {
+					nodes: [
+						{
+							username: 'user1',
+							password: 'pass',
+							socket: {
+								host: 'host1',
+								port: 6379,
+							},
+						},
+						{
+							username: 'user2',
+							password: 'pass',
+							socket: {
+								host: 'host2',
+								port: 6379,
+							},
+						}
+					]
+				}
+			}`,
+			expErr: `invalid options; reason: inconsistent username option: user1 != user2`,
 		},
 	}
 
@@ -61,14 +178,9 @@ func TestClientConstructor(t *testing.T) {
 			t.Parallel()
 
 			ts := newTestSetup(t)
-			rs := RunT(t)
-
-			var arg string
-			if tc.arg != "" {
-				arg = fmt.Sprintf(tc.arg, rs.Addr())
-			}
+			script := fmt.Sprintf("new Client(%s);", tc.arg)
 			gotScriptErr := ts.ev.Start(func() error {
-				_, err := ts.rt.RunString(fmt.Sprintf("new Client(%s);", arg))
+				_, err := ts.rt.RunString(script)
 				return err
 			})
 			if tc.expErr != "" {
