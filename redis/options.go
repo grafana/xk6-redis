@@ -80,7 +80,9 @@ type clusterNodesStringOptions struct {
 
 type sentinelOptions struct {
 	singleNodeOptions
-	MasterName string `json:"masterName,omitempty"`
+	MasterName       string `json:"masterName,omitempty"`
+	SentinelUsername string `json:"sentinelUsername,omitempty"`
+	SentinelPassword string `json:"sentinelPassword,omitempty"`
 }
 
 // newOptionsFromObject validates and instantiates an options struct from its
@@ -189,6 +191,17 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 			}
 		}
 	case *sentinelOptions:
+		uopts.MasterName = o.MasterName
+		uopts.SentinelUsername = o.SentinelUsername
+		uopts.SentinelPassword = o.SentinelPassword
+
+		ropts, err := o.toRedisOptions()
+		if err != nil {
+			return nil, err
+		}
+		if err = setConsistentOptions(uopts, ropts); err != nil {
+			return nil, err
+		}
 	case *singleNodeOptions:
 		ropts, err := o.toRedisOptions()
 		if err != nil {
