@@ -95,6 +95,20 @@ func TestClientConstructor(t *testing.T) {
 			}`,
 		},
 		{
+			name: "ok/object/sentinel",
+			arg: `{
+				username: 'user',
+				password: 'pass',
+				socket: {
+					host: 'localhost',
+					port: 6379,
+				},
+				masterName: 'masterhost',
+				sentinelUsername: 'sentineluser',
+				sentinelPassword: 'sentinelpass',
+			}`,
+		},
+		{
 			name:   "err/empty",
 			arg:    "",
 			expErr: "must specify one argument",
