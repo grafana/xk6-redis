@@ -38,6 +38,7 @@ func TestClientConstructor(t *testing.T) {
 			arg: `{
 				username: 'user',
 				password: 'pass',
+				clientName: 'myclient',
 				socket: {
 					host: 'localhost',
 					port: 6379,

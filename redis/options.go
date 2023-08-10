@@ -16,6 +16,7 @@ type singleNodeOptions struct {
 	Socket          *socketOptions `json:"socket,omitempty"`
 	Username        string         `json:"username,omitempty"`
 	Password        string         `json:"password,omitempty"`
+	ClientName      string         `json:"clientName,omitempty"`
 	Database        int            `json:"database,omitempty"`
 	MaxRetries      int            `json:"maxRetries,omitempty"`
 	MinRetryBackoff int64          `json:"minRetryBackoff,omitempty"`
@@ -224,7 +225,8 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 // Set UniversalOptions values from single-node options, ensuring that any
 // previously set values are consistent with the new values. This validates that
 // multiple node options set when using cluster mode are consistent with each other.
-//nolint: gocognit,cyclop,gofmt,gofumpt,goimports
+// TODO: Break apart, simplify?
+//nolint: gocognit,cyclop,funlen,gofmt,gofumpt,goimports
 func setConsistentOptions(uopts *redis.UniversalOptions, opts *redis.Options) error {
 	uopts.Addrs = append(uopts.Addrs, opts.Addr)
 
@@ -249,6 +251,11 @@ func setConsistentOptions(uopts *redis.UniversalOptions, opts *redis.Options) er
 		return fmt.Errorf("inconsistent password option")
 	}
 	uopts.Password = opts.Password
+
+	if uopts.ClientName != "" && opts.ClientName != "" && uopts.ClientName != opts.ClientName {
+		return fmt.Errorf("inconsistent clientName option: %s != %s", uopts.ClientName, opts.ClientName)
+	}
+	uopts.ClientName = opts.ClientName
 
 	if uopts.MaxRetries != 0 && opts.MaxRetries != 0 && uopts.MaxRetries != opts.MaxRetries {
 		return fmt.Errorf("inconsistent maxRetries option: %d != %d", uopts.MaxRetries, opts.MaxRetries)
