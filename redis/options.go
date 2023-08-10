@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -89,11 +90,20 @@ func newOptionsFromObject(obj map[string]interface{}) (*redis.UniversalOptions, 
 	var options interface{}
 	if cluster, ok := obj["cluster"].(map[string]interface{}); ok {
 		obj = cluster
-		switch cluster["nodes"].(type) {
-		case []interface{}:
+		nodes, ok := cluster["nodes"].([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("cluster nodes property must be an array; got %T", cluster["nodes"])
+		}
+		if len(nodes) == 0 {
+			return nil, errors.New("cluster nodes property cannot be empty")
+		}
+		switch nodes[0].(type) {
+		case map[string]interface{}:
 			options = &clusterNodesMapOptions{}
-		case []string:
+		case string:
 			options = &clusterNodesStringOptions{}
+		default:
+			return nil, fmt.Errorf("cluster nodes array must contain string or object elements; got %T", nodes[0])
 		}
 	} else if _, ok := obj["masterName"]; ok {
 		options = &sentinelOptions{}
