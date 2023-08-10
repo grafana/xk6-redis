@@ -3,12 +3,14 @@
 This is a Redis client library for [k6](https://github.com/grafana/k6),
 implemented as an extension using the [xk6](https://github.com/grafana/xk6) system.
 
-| :exclamation: This extension is going under heavy changes and is about to make it to k6's core. USE AT YOUR OWN RISK! |
-| --------------------------------------------------------------------------------------------------------------------- |
+| :exclamation: This extension is under heavy development, and breaking changes are possible. USE AT YOUR OWN RISK! |
+|-------------------------------------------------------------------------------------------------------------------|
 
 ## Build
 
-To build a `k6` binary with this extension, first ensure you have the prerequisites:
+This extension is available as an [experimental k6 module](https://k6.io/docs/javascript-api/k6-experimental/redis/) since k6 v0.40.0, so you don't need to build it with xk6 yourself, and can use it with the main k6 binary. Note that your script must import `k6/experimental/redis` instead of `k6/x/redis` if you're using the module bundled in k6.
+
+However, if you prefer to build it from source using xk6, first ensure you have the prerequisites:
 
 - [Go toolchain](https://go101.org/article/go-toolchain.html)
 - Git
@@ -39,11 +41,9 @@ with Redis in a seemingly synchronous manner.
 For instance, if you were to depend on values stored in Redis to perform HTTP calls, those HTTP calls should be made in the context of the Redis promise chain:
 
 ```javascript
-// Instantiate a new redis client
-const redisClient = new redis.Client({
-  addrs: __ENV.REDIS_ADDRS.split(",") || new Array("localhost:6379"), // in the form of "host:port", separated by commas
-  password: __ENV.REDIS_PASSWORD || "",
-})
+// Instantiate a new Redis client using a URL.
+// The connection will be established on the first command call.
+const client = new redis.Client('redis://localhost:6379');
 
 export default function() {
     // Once the SRANDMEMBER operation is succesfull,
@@ -51,9 +51,9 @@ export default function() {
     // set member value to the caller of the resolve callback.
     //
     // The next promise performs the synchronous HTTP call, and
-    // returns a promise to the next operation, which uses the 
+    // returns a promise to the next operation, which uses the
     // passed URL value to store some data in redis.
-    redisClient.srandmember('client_ids')
+    client.srandmember('client_ids')
         .then((randomID) => {
             const url = `https://my.url/${randomID}`
             const res = http.get(url)
@@ -63,133 +63,137 @@ export default function() {
             // return a promise resolving to the URL
             return url
         })
-        .then((url) => redisClient.hincrby('k6_crocodile_fetched', url, 1))
+        .then((url) => client.hincrby('k6_crocodile_fetched', url, 1));
 }
 ```
 
-## Example test scripts
+You can see more complete examples in the [/examples](/examples) directory.
 
-In this example we demonstrate two scenarios: one load testing a redis instance, another using redis as an external data store used throughout the test itself.
+
+### Single-node client
+
+As shown in the above example, the simplest way to create a new `Client` instance that connects to a single Redis server is by passing a URL string. It must be in the format:
+
+```
+redis[s]://[[username][:password]@][host][:port][/db-number]
+```
+
+A client can also be instantiated using an object, for more flexibility:
+```javascript
+const client = new redis.Client({
+  socket: {
+    host: 'localhost',
+    port: 6379,
+  },
+  username: 'someusername',
+  password: 'somepassword',
+});
+```
+
+
+### Cluster client
+
+You can connect to a cluster of Redis servers by using the `cluster` property, and passing 2 or more node URLs:
+```javascript
+const client = new redis.Client({
+  cluster: {
+    // Cluster options
+    maxRedirects: 3,
+    readOnly: true,
+    routeByLatency: true,
+    routeRandomly: true,
+    nodes: ['redis://host1:6379', 'redis://host2:6379']
+  }
+});
+```
+
+Or the same as above, but using node objects:
+```javascript
+const client = new redis.Client({
+  cluster: {
+    nodes: [
+      {
+        socket: {
+          host: 'host1',
+          port: 6379,
+        }
+      },
+      {
+        socket: {
+          host: 'host2',
+          port: 6379,
+        }
+      }
+    ]
+  }
+});
+```
+
+
+### Sentinel (failover) client
+
+A [Redis Sentinel](https://redis.io/docs/management/sentinel/) provides high availability features, as an alternative to a Redis cluster.
+
+You can connect to a sentinel instance by setting additional options in the object passed to the `Client` constructor:
+```javascript
+const client = new redis.Client({
+  username: 'someusername',
+  password: 'somepassword',
+  socket: {
+    host: 'localhost',
+    port: 6379,
+  },
+  // Sentinel options
+  masterName: 'masterhost',
+  sentinelUsername: 'sentineluser',
+  sentinelPassword: 'sentinelpass',
+});
+```
+
+
+### TLS
+
+A TLS connection can be established in a couple of ways.
+
+If the server has a certificate signed by a public Certificate Authority, you can use the `rediss` URL scheme:
+```javascript
+const client = new redis.Client('rediss://example.com');
+```
+
+Otherwise, you can supply your own self-signed certificate in PEM format using the `socket.tls` object:
+```javascript
+const client = new redis.Client({
+  socket: {
+    host: 'localhost',
+    port: 6379,
+    tls: {
+      ca: [open('ca.crt')],
+    }
+  },
+});
+```
+
+Note that for self-signed certificates, [k6's `insecureSkipTLSVerify` option](https://k6.io/docs/using-k6/k6-options/reference/#insecure-skip-tls-verify) must be enabled (set to `true`).
+
+
+### TLS client authentication (mTLS)
+
+You can also enable mTLS by setting two additional properties in the `socket.tls` object:
 
 ```javascript
-import { check } from "k6";
-import http from "k6/http";
-import redis from "k6/x/redis";
-import exec from "k6/execution";
-import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
-
-export const options = {
-  scenarios: {
-    redisPerformance: {
-      executor: "shared-iterations",
-      vus: 10,
-      iterations: 200,
-      exec: "measureRedisPerformance",
-    },
-    usingRedisData: {
-      executor: "shared-iterations",
-      vus: 10,
-      iterations: 200,
-      exec: "measureUsingRedisData",
-    },
+const client = new redis.Client({
+  socket: {
+    host: 'localhost',
+    port: 6379,
+    tls: {
+      ca: [open('ca.crt')],
+      cert: open('client.crt'),  // client certificate
+      key: open('client.key'),   // client private key
+    }
   },
-};
-
-// Instantiate a new redis client
-const redisClient = new redis.Client({
-  addrs: __ENV.REDIS_ADDRS.split(",") || new Array("localhost:6379"), // in the form of "host:port", separated by commas
-  password: __ENV.REDIS_PASSWORD || "",
 });
-
-// Prepare an array of crocodile ids for later use
-// in the context of the measureUsingRedisData function.
-const crocodileIDs = new Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-
-export function measureRedisPerformance() {
-  // VUs are executed in a parallel fashion,
-  // thus, to ensure that parallel VUs are not
-  // modifying the same key at the same time,
-  // we use keys indexed by the VU id.
-  const key = `foo-${exec.vu.idInTest}`;
-
-  redisClient
-    .set(`foo-${exec.vu.idInTest}`, 1)
-    .then(() => redisClient.get(`foo-${exec.vu.idInTest}`))
-    .then((value) => redisClient.incrBy(`foo-${exec.vu.idInTest}`, value))
-    .then((_) => redisClient.del(`foo-${exec.vu.idInTest}`))
-    .then((_) => redisClient.exists(`foo-${exec.vu.idInTest}`))
-    .then((exists) => {
-      if (exists !== 0) {
-        throw new Error("foo should have been deleted");
-      }
-    });
-}
-
-export function setup() {
-  redisClient.sadd("crocodile_ids", ...crocodileIDs);
-}
-
-export function measureUsingRedisData() {
-  // Pick a random crocodile id from the dedicated redis set,
-  // we have filled in setup().
-  redisClient
-    .srandmember("crocodile_ids")
-    .then((randomID) => {
-      const url = `https://test-api.k6.io/public/crocodiles/${randomID}`;
-      const res = http.get(url);
-
-      check(res, {
-        "status is 200": (r) => r.status === 200,
-        "content-type is application/json": (r) =>
-          r.headers["content-type"] === "application/json",
-      });
-
-      return url;
-    })
-    .then((url) => redisClient.hincrby("k6_crocodile_fetched", url, 1));
-}
-
-export function teardown() {
-  redisClient.del("crocodile_ids");
-}
-
-export function handleSummary(data) {
-  redisClient
-    .hgetall("k6_crocodile_fetched")
-    .then((fetched) => Object.assign(data, { k6_crocodile_fetched: fetched }))
-    .then((data) =>
-      redisClient.set(`k6_report_${Date.now()}`, JSON.stringify(data))
-    )
-    .then(() => redisClient.del("k6_crocodile_fetched"));
-
-  return {
-    stdout: textSummary(data, { indent: "  ", enableColors: true }),
-  };
-}
 ```
 
-Result output:
-
-```shell
-$ ./k6 run test.js
-
-          /\      |‾‾| /‾‾/   /‾‾/   
-     /\  /  \     |  |/  /   /  /    
-    /  \/    \    |     (   /   ‾‾\  
-   /          \   |  |\  \ |  (‾)  | 
-  / __________ \  |__| \__\ \_____/ .io
-
-  execution: local
-     script: test.js
-     output: -
-
-  scenarios: (100.00%) 1 scenario, 10 max VUs, 1m30s max duration (incl. graceful stop):
-           * default: 10 looping VUs for 1m0s (gracefulStop: 30s)
-
-
-running (1m00.1s), 00/10 VUs, 4954 complete and 0 interrupted iterations
-default ✓ [======================================] 10 VUs  1m0s
-```
 
 ## API
 
@@ -228,7 +232,7 @@ xk6-redis exposes a subset of Redis' [commands](https://redis.io/commands) the c
 | **LSET**      | `lset(key: string, index: number, element: string)`                     | Sets the list element at `index` to `element`.                                                                                                                                                                                                                                                     | On **success**, the promise **resolves** with `"OK"`. If the list does not exist, or the index is out of bounds, the promise is **rejected** with an error.                |
 | **LREM**      | `lrem(key: string, count: number, value: string) => Promise<number>`    | Removes the first `count` occurrences of `value` from the list stored at `key`. If `count` is positive, elements are removed from the beginning of the list. If `count` is negative, elements are removed from the end of the list. If `count` is zero, all elements matching `value` are removed. | On **success**, the promise **resolves** with the number of removed elements. If the list does not exist, the promise is **rejected** with an error.                       |
 | **LLEN**      | `llen(key: string) => Promise<number>`                                  | Returns the length of the list stored at `key`. If `key` does not exist, it is interpreted as an empty list and 0 is returned.                                                                                                                                                                     | On **success**, the promise **resolves** with the length of the list at `key`. If the list does not exist, the promise is **rejected** with an error.                      |
- 
+
 ### Hash field operations
 
 | Redis Command | Module function signature | Description | Returns |
