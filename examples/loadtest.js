@@ -21,11 +21,11 @@ export const options = {
   },
 };
 
-// Instantiate a new redis client
-const redisClient = new redis.Client({
-  addrs: __ENV.REDIS_ADDRS.split(",") || new Array("localhost:6379"), // in the form of "host:port", separated by commas
-  password: __ENV.REDIS_PASSWORD || "",
-});
+// Instantiate a new Redis client using a URL
+const redisClient = new redis.Client(
+  // URL in the form of redis[s]://[[username][:password]@][host][:port][/db-number
+  __ENV.REDIS_URL || "redis://localhost:6379",
+);
 
 // Prepare an array of crocodile ids for later use
 // in the context of the measureUsingRedisData function.
