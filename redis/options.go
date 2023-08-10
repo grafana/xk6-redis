@@ -61,7 +61,7 @@ type tlsOptions struct {
 	Key  string   `json:"key,omitempty"`
 }
 
-type commonClusterSentinelOptions struct {
+type commonClusterOptions struct {
 	MaxRedirects   int  `json:"maxRedirects,omitempty"`
 	ReadOnly       bool `json:"readOnly,omitempty"`
 	RouteByLatency bool `json:"routeByLatency,omitempty"`
@@ -69,18 +69,17 @@ type commonClusterSentinelOptions struct {
 }
 
 type clusterNodesMapOptions struct {
-	commonClusterSentinelOptions
+	commonClusterOptions
 	Nodes []*singleNodeOptions `json:"nodes,omitempty"`
 }
 
 type clusterNodesStringOptions struct {
-	commonClusterSentinelOptions
+	commonClusterOptions
 	Nodes []string `json:"nodes,omitempty"`
 }
 
 type sentinelOptions struct {
 	singleNodeOptions
-	commonClusterSentinelOptions
 	MasterName string `json:"masterName,omitempty"`
 }
 
@@ -166,11 +165,7 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 
 	switch o := options.(type) {
 	case *clusterNodesMapOptions:
-		// TODO: DRY
-		uopts.MaxRedirects = o.MaxRedirects
-		uopts.ReadOnly = o.ReadOnly
-		uopts.RouteByLatency = o.RouteByLatency
-		uopts.RouteRandomly = o.RouteRandomly
+		setClusterOptions(uopts, &o.commonClusterOptions)
 
 		for _, n := range o.Nodes {
 			ropts, err := n.toRedisOptions()
@@ -182,10 +177,7 @@ func toUniversalOptions(options interface{}) (*redis.UniversalOptions, error) {
 			}
 		}
 	case *clusterNodesStringOptions:
-		uopts.MaxRedirects = o.MaxRedirects
-		uopts.ReadOnly = o.ReadOnly
-		uopts.RouteByLatency = o.RouteByLatency
-		uopts.RouteRandomly = o.RouteRandomly
+		setClusterOptions(uopts, &o.commonClusterOptions)
 
 		for _, n := range o.Nodes {
 			ropts, err := redis.ParseURL(n)
@@ -301,6 +293,13 @@ func setConsistentOptions(uopts *redis.UniversalOptions, opts *redis.Options) er
 	uopts.ConnMaxIdleTime = opts.ConnMaxIdleTime
 
 	return nil
+}
+
+func setClusterOptions(uopts *redis.UniversalOptions, opts *commonClusterOptions) {
+	uopts.MaxRedirects = opts.MaxRedirects
+	uopts.ReadOnly = opts.ReadOnly
+	uopts.RouteByLatency = opts.RouteByLatency
+	uopts.RouteRandomly = opts.RouteRandomly
 }
 
 func setSocketOptions(opts *redis.Options, sopts *socketOptions) error {

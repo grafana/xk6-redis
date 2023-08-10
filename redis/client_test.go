@@ -68,6 +68,10 @@ func TestClientConstructor(t *testing.T) {
 			name: "ok/object/cluster_objects",
 			arg: `{
 				cluster: {
+					maxRedirects: 3,
+					readOnly: true,
+					routeByLatency: true,
+					routeRandomly: true,
 					nodes: [
 						{
 							username: 'user',
