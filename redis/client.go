@@ -1094,8 +1094,6 @@ func (c *Client) connect() error {
 			tlsCfg.KeyLogWriter = vuState.TLSConfig.KeyLogWriter
 
 			tlsCfg.Certificates = append(tlsCfg.Certificates, vuState.TLSConfig.Certificates...)
-			//nolint:staticcheck // ignore SA1019 This was deprecated, but k6 still supports it.
-			tlsCfg.NameToCertificate = vuState.TLSConfig.NameToCertificate
 
 			// TODO: Merge vuState.TLSConfig.RootCAs with
 			// c.redisOptions.TLSConfig. k6 currently doesn't allow setting
