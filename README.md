@@ -3,7 +3,7 @@
 This is a Redis client library for [k6](https://github.com/grafana/k6),
 implemented as an extension using the [xk6](https://github.com/grafana/xk6) system.
 
-| :exclamation: This extension is under heavy development, and breaking changes are possible. USE AT YOUR OWN RISK! |
+| :exclamation: This extension is an experimental project, and breaking changes are possible. USE AT YOUR OWN RISK! |
 |-------------------------------------------------------------------------------------------------------------------|
 
 ## Build
