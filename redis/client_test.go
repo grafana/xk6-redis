@@ -2560,6 +2560,7 @@ type testSetup struct {
 	state   *lib.State
 	samples chan metrics.SampleContainer
 	ev      *eventloop.EventLoop
+	tb      *httpmultibin.HTTPMultiBin
 }
 
 // newTestSetup initializes a new test setup.
@@ -2618,6 +2619,7 @@ func newTestSetup(t testing.TB) testSetup {
 		state:   state,
 		samples: samples,
 		ev:      ev,
+		tb:      tb,
 	}
 }
 
@@ -2731,4 +2733,53 @@ func TestClientTLSAuth(t *testing.T) {
 		{"HELLO", "2"},
 		{"PING"},
 	}, rs.GotCommands())
+}
+
+func TestClientTLSRespectsNetworkOPtions(t *testing.T) {
+	t.Parallel()
+
+	clientCert, clientPKey, err := generateTLSCert()
+	require.NoError(t, err)
+
+	ts := newTestSetup(t)
+	rs := RunTSecure(t, clientCert)
+
+	err = ts.rt.Set("caCert", string(rs.TLSCertificate()))
+	require.NoError(t, err)
+	err = ts.rt.Set("clientCert", string(clientCert))
+	require.NoError(t, err)
+	err = ts.rt.Set("clientPKey", string(clientPKey))
+	require.NoError(t, err)
+
+	// Set the redis server's IP to be blacklisted.
+	net, err := lib.ParseCIDR(rs.Addr().IP.String() + "/32")
+	require.NoError(t, err)
+	ts.tb.Dialer.Blacklist = []*lib.IPNet{net}
+
+	gotScriptErr := ts.ev.Start(func() error {
+		_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				socket: {
+					host: '%s',
+					port: %d,
+					tls: {
+						ca: [caCert],
+						cert: clientCert,
+						key: clientPKey
+					}
+				}
+			});
+
+			// This operation triggers a connection to the redis
+			// server under the hood, and should therefore fail, since
+			// the server's IP is blacklisted by k6.
+			redis.sendCommand("PING")
+		`, rs.Addr().IP.String(), rs.Addr().Port))
+
+		return err
+	})
+
+	assert.Error(t, gotScriptErr)
+	assert.ErrorContains(t, gotScriptErr, "IP ("+rs.Addr().IP.String()+") is in a blacklisted range")
+	assert.Equal(t, 0, rs.HandledCommandsCount())
 }
