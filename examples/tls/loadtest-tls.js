@@ -10,14 +10,14 @@ export const options = {
 // Instantiate a new Redis client using a URL
 // const client = new redis.Client('rediss://localhost:6379')
 const client = new redis.Client({
-    password: "password",
+    password: "tjkbZ8jrwz3pGiku",
     socket:{
         host: "localhost",
         port: 6379,
         tls: {
-            ca: [open('tests/tls/ca.crt')],
-            cert: open('tests/tls/client.crt'),  // client cert
-            key: open('tests/tls/client.key'),  // client private key
+            ca: [open('docker/tests/tls/ca.crt')],
+            cert: open('docker/tests/tls/client.crt'),  // client cert
+            key: open('docker/tests/tls/client.key'),  // client private key
         }
     }
 });
