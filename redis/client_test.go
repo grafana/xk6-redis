@@ -19,6 +19,199 @@ import (
 	"gopkg.in/guregu/null.v3"
 )
 
+func TestClientConstructor(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name, arg, expErr string
+	}{
+		{
+			name: "ok/url/tcp",
+			arg:  "'redis://user:pass@localhost:6379/0'",
+		},
+		{
+			name: "ok/url/tls",
+			arg:  "'rediss://somesecurehost'",
+		},
+		{
+			name: "ok/object/single",
+			arg: `{
+				clientName: 'myclient',
+				username: 'user',
+				password: 'pass',
+				socket: {
+					host: 'localhost',
+					port: 6379,
+				}
+			}`,
+		},
+		{
+			name: "ok/object/single_tls",
+			arg: `{
+				socket: {
+					host: 'localhost',
+					port: 6379,
+					tls: {
+						ca: ['...'],
+					}
+				}
+			}`,
+		},
+		{
+			name: "ok/object/cluster_urls",
+			arg: `{
+				cluster: {
+					maxRedirects: 3,
+					readOnly: true,
+					routeByLatency: true,
+					routeRandomly: true,
+					nodes: ['redis://host1:6379', 'redis://host2:6379']
+				}
+			}`,
+		},
+		{
+			name: "ok/object/cluster_objects",
+			arg: `{
+				cluster: {
+					nodes: [
+						{
+							username: 'user',
+							password: 'pass',
+							socket: {
+								host: 'host1',
+								port: 6379,
+							},
+						},
+						{
+							username: 'user',
+							password: 'pass',
+							socket: {
+								host: 'host2',
+								port: 6379,
+							},
+						}
+					]
+				}
+			}`,
+		},
+		{
+			name: "ok/object/sentinel",
+			arg: `{
+				username: 'user',
+				password: 'pass',
+				socket: {
+					host: 'localhost',
+					port: 6379,
+				},
+				masterName: 'masterhost',
+				sentinelUsername: 'sentineluser',
+				sentinelPassword: 'sentinelpass',
+			}`,
+		},
+		{
+			name:   "err/empty",
+			arg:    "",
+			expErr: "must specify one argument",
+		},
+		{
+			name:   "err/url/missing_scheme",
+			arg:    "'localhost:6379'",
+			expErr: "invalid URL scheme",
+		},
+		{
+			name:   "err/url/invalid_scheme",
+			arg:    "'https://localhost:6379'",
+			expErr: "invalid options; reason: redis: invalid URL scheme: https",
+		},
+		{
+			name:   "err/object/unknown_field",
+			arg:    "{addrs: ['localhost:6379']}",
+			expErr: `invalid options; reason: json: unknown field "addrs"`,
+		},
+		{
+			name: "err/object/empty_socket",
+			arg: `{
+				username: 'user',
+				password: 'pass',
+			}`,
+			expErr: "invalid options; reason: empty socket options",
+		},
+		{
+			name: "err/object/cluster_wrong_type",
+			arg: `{
+				cluster: {
+					nodes: 1,
+				}
+			}`,
+			expErr: `invalid options; reason: cluster nodes property must be an array; got int64`,
+		},
+		{
+			name: "err/object/cluster_wrong_type_internal",
+			arg: `{
+				cluster: {
+					nodes: [1, 2],
+				}
+			}`,
+			expErr: `invalid options; reason: cluster nodes array must contain string or object elements; got int64`,
+		},
+		{
+			name: "err/object/cluster_empty",
+			arg: `{
+				cluster: {
+					nodes: []
+				}
+			}`,
+			expErr: `invalid options; reason: cluster nodes property cannot be empty`,
+		},
+		{
+			name: "err/object/cluster_inconsistent_option",
+			arg: `{
+				cluster: {
+					nodes: [
+						{
+							username: 'user1',
+							password: 'pass',
+							socket: {
+								host: 'host1',
+								port: 6379,
+							},
+						},
+						{
+							username: 'user2',
+							password: 'pass',
+							socket: {
+								host: 'host2',
+								port: 6379,
+							},
+						}
+					]
+				}
+			}`,
+			expErr: `invalid options; reason: inconsistent username option: user1 != user2`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			ts := newTestSetup(t)
+			script := fmt.Sprintf("new Client(%s);", tc.arg)
+			gotScriptErr := ts.ev.Start(func() error {
+				_, err := ts.rt.RunString(script)
+				return err
+			})
+			if tc.expErr != "" {
+				require.Error(t, gotScriptErr)
+				assert.Contains(t, gotScriptErr.Error(), tc.expErr)
+			} else {
+				assert.NoError(t, gotScriptErr)
+			}
+		})
+	}
+}
+
 func TestClientSet(t *testing.T) {
 	t.Parallel()
 
@@ -43,9 +236,7 @@ func TestClientSet(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.set("existing_key", "new_value")
 				.then(res => { if (res !== "OK") { throw 'unexpected value for set result: ' + res } })
@@ -94,9 +285,7 @@ func TestClientGet(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.get("existing_key")
 				.then(res => { if (res !== "old_value") { throw 'unexpected value for get result: ' + res } })
@@ -140,9 +329,7 @@ func TestClientGetSet(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.getSet("existing_key", "new_value")
 				.then(res => { if (res !== "old_value") { throw 'unexpected value for getSet result: ' + res } })
@@ -183,9 +370,7 @@ func TestClientDel(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.del("key1", "key2", "nonexisting_key")
 				.then(res => { if (res !== 2) { throw 'unexpected value for del result: ' + res } })
@@ -223,9 +408,7 @@ func TestClientGetDel(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.getDel("existing_key")
 				.then(res => { if (res !== "old_value") { throw 'unexpected value for getDel result: ' + res } })
@@ -264,9 +447,7 @@ func TestClientExists(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.exists("existing_key", "nonexisting_key")
 				.then(res => { if (res !== 1) { throw 'unexpected value for exists result: ' + res } })
@@ -306,9 +487,7 @@ func TestClientIncr(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.incr("existing_key")
 				.then(res => { if (res !== 11) { throw 'unexpected value for existing key incr result: ' + res } })
@@ -357,9 +536,7 @@ func TestClientIncrBy(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.incrBy("existing_key", 10)
 				.then(res => { if (res !== 20) { throw 'unexpected value for incrBy result: ' + res } })
@@ -402,9 +579,7 @@ func TestClientDecr(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.decr("existing_key")
 				.then(res => { if (res !== 9) { throw 'unexpected value for decr result: ' + res } })
@@ -453,9 +628,7 @@ func TestClientDecrBy(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.decrBy("existing_key", 2)
 				.then(res => { if (res !== 8) { throw 'unexpected value for decrBy result: ' + res } })
@@ -499,9 +672,7 @@ func TestClientRandomKey(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.randomKey()
 				.then(
@@ -540,9 +711,7 @@ func TestClientMget(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.mget("existing_key", "non_existing_key")
 				.then(
@@ -586,9 +755,7 @@ func TestClientExpire(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.expire("expires_key", 10)
 				.then(res => { if (res !== true) { throw 'unexpected value for expire result: ' + res } })
@@ -629,9 +796,7 @@ func TestClientTTL(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.ttl("expires_key")
 				.then(res => { if (res !== 10) { throw 'unexpected value for expire result: ' + res } })
@@ -672,9 +837,7 @@ func TestClientPersist(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.persist("expires_key")
 				.then(res => { if (res !== true) { throw 'unexpected value for expire result: ' + res } })
@@ -718,9 +881,7 @@ func TestClientLPush(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lpush("existing_list", "second", "first")
 				.then(res => { if (res !== 3) { throw 'unexpected value for lpush result: ' + res } })
@@ -764,9 +925,7 @@ func TestClientRPush(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.rpush("existing_list", "second", "third")
 				.then(res => { if (res !== 3) { throw 'unexpected value for rpush result: ' + res } })
@@ -809,9 +968,7 @@ func TestClientLPop(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lpop("existing_list")
 				.then(res => { if (res !== "first") { throw 'unexpected value for lpop first result: ' + res } })
@@ -862,9 +1019,7 @@ func TestClientRPop(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.rpop("existing_list")
 				.then(res => { if (res !== "second") { throw 'unexpected value for rpop result: ' + res }})
@@ -927,9 +1082,7 @@ func TestClientLRange(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lrange("existing_list", 0, 0)
 				.then(res => { if (res.length !== 1 || res[0] !== "first") { throw 'unexpected value for lrange result: ' + res }})
@@ -993,9 +1146,7 @@ func TestClientLIndex(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lindex("existing_list", 0)
 				.then(res => { if (res !== "first") { throw 'unexpected value for lindex result: ' + res } })
@@ -1053,9 +1204,7 @@ func TestClientClientLSet(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lset("existing_list", 0, "new_first")
 				.then(res => { if (res !== "OK") { throw 'unexpected value for lset result: ' + res }})
@@ -1101,9 +1250,7 @@ func TestClientLrem(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.lrem("existing_list", 1, "first")
 				.then(() => redis.lrem("existing_list", 0, "second"))
@@ -1150,9 +1297,7 @@ func TestClientLlen(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.llen("existing_list")
 				.then(res => { if (res !== 3) { throw 'unexpected value for llen result: ' + res } })
@@ -1198,9 +1343,7 @@ func TestClientHSet(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hset("existing_hash", "key", "value")
 				.then(res => { if (res !== 1) { throw 'unexpected value for hset result: ' + res } })
@@ -1254,9 +1397,7 @@ func TestClientHsetnx(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hsetnx("existing_hash", "key", "value")
 				.then(res => { if (res !== true) { throw 'unexpected value for hsetnx result: ' + res } })
@@ -1300,9 +1441,7 @@ func TestClientHget(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hget("existing_hash", "foo")
 				.then(res => { if (res !== "bar") { throw 'unexpected value for hget result: ' + res } })
@@ -1346,9 +1485,7 @@ func TestClientHdel(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hdel("existing_hash", "foo")
 				.then(res => { if (res !== 1) { throw 'unexpected value for hdel result: ' + res } })
@@ -1392,9 +1529,7 @@ func TestClientHgetall(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hgetall("existing_hash")
 				.then(res => { if (typeof res !== "object" || res['foo'] !== 'bar') { throw 'unexpected value for hgetall result: ' + res } })
@@ -1438,9 +1573,7 @@ func TestClientHkeys(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hkeys("existing_hash")
 				.then(res => { if (res.length !== 1 || res[0] !== 'foo') { throw 'unexpected value for hkeys result: ' + res } })
@@ -1484,9 +1617,7 @@ func TestClientHvals(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hvals("existing_hash")
 				.then(res => { if (res.length !== 1 || res[0] !== 'bar') { throw 'unexpected value for hvals result: ' + res } })
@@ -1530,9 +1661,7 @@ func TestClientHlen(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hlen("existing_hash")
 				.then(res => { if (res !== 1) { throw 'unexpected value for hlen result: ' + res } })
@@ -1585,9 +1714,7 @@ func TestClientHincrby(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.hincrby("existing_hash", "foo", 1)
 				.then(res => { if (res !== 2) { throw 'unexpected value for hincrby result: ' + res } })
@@ -1638,9 +1765,7 @@ func TestClientSadd(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.sadd("existing_set", "bar")
 				.then(res => { if (res !== 1) { throw 'unexpected value for sadd result: ' + res } })
@@ -1691,9 +1816,7 @@ func TestClientSrem(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.srem("existing_set", "foo")
 				.then(res => { if (res !== 1) { throw 'unexpected value for srem result: ' + res } })
@@ -1745,9 +1868,7 @@ func TestClientSismember(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.sismember("existing_set", "foo")
 				.then(res => { if (res !== true) { throw 'unexpected value for sismember result: ' + res } })
@@ -1791,9 +1912,7 @@ func TestClientSmembers(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.smembers("existing_set")
 				.then(res => { if (res.length !== 2 || 'foo' in res || 'bar' in res) { throw 'unexpected value for smembers result: ' + res } })
@@ -1834,9 +1953,7 @@ func TestClientSrandmember(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.srandmember("existing_set")
 				.then(res => { if (res !== 'foo' && res !== 'bar') { throw 'unexpected value for srandmember result: ' + res} })
@@ -1880,9 +1997,7 @@ func TestClientSpop(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.spop("existing_set")
 				.then(res => { if (res !== 'foo' && res !== 'bar') { throw 'unexpected value for spop result: ' + res} })
@@ -1928,9 +2043,7 @@ func TestClientSendCommand(t *testing.T) {
 
 	gotScriptErr := ts.ev.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
-			const redis = new Client({
-				addrs: new Array("%s"),
-			});
+			const redis = new Client('redis://%s');
 
 			redis.sendCommand("sadd", "existing_set", "foo")
 				.then(res => { if (res !== 1) { throw 'unexpected value for sadd result: ' + res } })
@@ -2134,9 +2247,7 @@ func TestClientCommandsInInitContext(t *testing.T) {
 
 			gotScriptErr := ts.ev.Start(func() error {
 				_, err := ts.rt.RunString(fmt.Sprintf(`
-				const redis = new Client({
-					addrs: new Array("unreachable:42424"),
-				});
+				const redis = new Client('redis://unreachable:42424');
 
 				%s.then(res => { throw 'expected to fail when called in the init context' })
 			`, tc.statement))
@@ -2332,9 +2443,7 @@ func TestClientCommandsAgainstUnreachableServer(t *testing.T) {
 
 			gotScriptErr := ts.ev.Start(func() error {
 				_, err := ts.rt.RunString(fmt.Sprintf(`
-				const redis = new Client({
-					addrs: new Array("unreachable:42424"),
-				});
+				const redis = new Client('redis://unreachable:42424');
 
 				%s.then(res => { throw 'expected to fail when server is unreachable' })
 			`, tc.statement))
@@ -2451,6 +2560,7 @@ type testSetup struct {
 	state   *lib.State
 	samples chan metrics.SampleContainer
 	ev      *eventloop.EventLoop
+	tb      *httpmultibin.HTTPMultiBin
 }
 
 // newTestSetup initializes a new test setup.
@@ -2467,6 +2577,12 @@ func newTestSetup(t testing.TB) testSetup {
 	require.NoError(t, err)
 
 	samples := make(chan metrics.SampleContainer, 1000)
+
+	// We use self-signed TLS certificates for some tests, and need to disable
+	// strict verification. Since we don't use the k6 js.Runner, we can't set
+	// the k6 option InsecureSkipTLSVerify for this, and must override it in the
+	// TLS config we use from HTTPMultiBin.
+	tb.TLSClientConfig.InsecureSkipVerify = true
 
 	state := &lib.State{
 		Group:  root,
@@ -2503,6 +2619,7 @@ func newTestSetup(t testing.TB) testSetup {
 		state:   state,
 		samples: samples,
 		ev:      ev,
+		tb:      tb,
 	}
 }
 
@@ -2537,4 +2654,132 @@ func newInitContextTestSetup(t testing.TB) testSetup {
 		samples: samples,
 		ev:      ev,
 	}
+}
+
+func TestClientTLS(t *testing.T) {
+	t.Parallel()
+
+	ts := newTestSetup(t)
+	rs := RunTSecure(t, nil)
+
+	err := ts.rt.Set("caCert", string(rs.TLSCertificate()))
+	require.NoError(t, err)
+
+	gotScriptErr := ts.ev.Start(func() error {
+		_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				socket: {
+					host: '%s',
+					port: %d,
+					tls: {
+						ca: [caCert],
+					}
+				}
+			});
+
+			redis.sendCommand("PING");
+		`, rs.Addr().IP.String(), rs.Addr().Port))
+
+		return err
+	})
+
+	require.NoError(t, gotScriptErr)
+	assert.Equal(t, 1, rs.HandledCommandsCount())
+	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
+		{"PING"},
+	}, rs.GotCommands())
+}
+
+func TestClientTLSAuth(t *testing.T) {
+	t.Parallel()
+
+	clientCert, clientPKey, err := generateTLSCert()
+	require.NoError(t, err)
+
+	ts := newTestSetup(t)
+	rs := RunTSecure(t, clientCert)
+
+	err = ts.rt.Set("caCert", string(rs.TLSCertificate()))
+	require.NoError(t, err)
+	err = ts.rt.Set("clientCert", string(clientCert))
+	require.NoError(t, err)
+	err = ts.rt.Set("clientPKey", string(clientPKey))
+	require.NoError(t, err)
+
+	gotScriptErr := ts.ev.Start(func() error {
+		_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				socket: {
+					host: '%s',
+					port: %d,
+					tls: {
+						ca: [caCert],
+						cert: clientCert,
+						key: clientPKey
+					}
+				}
+			});
+
+			redis.sendCommand("PING");
+		`, rs.Addr().IP.String(), rs.Addr().Port))
+
+		return err
+	})
+
+	require.NoError(t, gotScriptErr)
+	assert.Equal(t, 1, rs.HandledCommandsCount())
+	assert.Equal(t, [][]string{
+		{"HELLO", "2"},
+		{"PING"},
+	}, rs.GotCommands())
+}
+
+func TestClientTLSRespectsNetworkOPtions(t *testing.T) {
+	t.Parallel()
+
+	clientCert, clientPKey, err := generateTLSCert()
+	require.NoError(t, err)
+
+	ts := newTestSetup(t)
+	rs := RunTSecure(t, clientCert)
+
+	err = ts.rt.Set("caCert", string(rs.TLSCertificate()))
+	require.NoError(t, err)
+	err = ts.rt.Set("clientCert", string(clientCert))
+	require.NoError(t, err)
+	err = ts.rt.Set("clientPKey", string(clientPKey))
+	require.NoError(t, err)
+
+	// Set the redis server's IP to be blacklisted.
+	net, err := lib.ParseCIDR(rs.Addr().IP.String() + "/32")
+	require.NoError(t, err)
+	ts.tb.Dialer.Blacklist = []*lib.IPNet{net}
+
+	gotScriptErr := ts.ev.Start(func() error {
+		_, err := ts.rt.RunString(fmt.Sprintf(`
+			const redis = new Client({
+				socket: {
+					host: '%s',
+					port: %d,
+					tls: {
+						ca: [caCert],
+						cert: clientCert,
+						key: clientPKey
+					}
+				}
+			});
+
+			// This operation triggers a connection to the redis
+			// server under the hood, and should therefore fail, since
+			// the server's IP is blacklisted by k6.
+			redis.sendCommand("PING")
+		`, rs.Addr().IP.String(), rs.Addr().Port))
+
+		return err
+	})
+
+	assert.Error(t, gotScriptErr)
+	assert.ErrorContains(t, gotScriptErr, "IP ("+rs.Addr().IP.String()+") is in a blacklisted range")
+	assert.Equal(t, 0, rs.HandledCommandsCount())
 }
