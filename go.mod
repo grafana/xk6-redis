@@ -3,10 +3,10 @@ module github.com/grafana/xk6-redis
 go 1.19
 
 require (
-	github.com/dop251/goja v0.0.0-20230707174833-636fdf960de1
+	github.com/dop251/goja v0.0.0-20230919151941-fc55792775de
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/stretchr/testify v1.8.4
-	go.k6.io/k6 v0.45.1
+	go.k6.io/k6 v0.47.0
 	gopkg.in/guregu/null.v3 v3.5.0
 )
 
@@ -36,10 +36,10 @@ require (
 	github.com/serenize/snaker v0.0.0-20201027110005-a7ad2135616e // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
-	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230731193218-e0aa005b6bdf // indirect
 	google.golang.org/grpc v1.57.0 // indirect
