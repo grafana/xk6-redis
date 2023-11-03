@@ -7,8 +7,15 @@ require (
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/stretchr/testify v1.8.4
 	go.k6.io/k6 v0.47.0
-	gopkg.in/guregu/null.v3 v3.5.0
+
+	// To facilitate the integration of the extension in the k6 core codebase
+	// we need to use the same version of the dependencies as k6.
+	gopkg.in/guregu/null.v3 v3.3.0
 )
+
+// To facilitate the integration of the extension in the k6 core codebase
+// we need to use the same version of the dependencies as k6.
+replace github.com/spf13/afero => github.com/spf13/afero v1.1.2
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
@@ -35,7 +42,7 @@ require (
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/serenize/snaker v0.0.0-20201027110005-a7ad2135616e // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/spf13/afero v1.9.5 // indirect
+	github.com/spf13/afero v1.1.2 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
