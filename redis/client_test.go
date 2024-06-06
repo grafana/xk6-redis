@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.k6.io/k6/js/common"
@@ -2556,7 +2556,7 @@ func TestClientIsSupportedType(t *testing.T) {
 // necessary to test the redis client, in the context
 // of the execution of a k6 script.
 type testSetup struct {
-	rt      *goja.Runtime
+	rt      *sobek.Runtime
 	state   *lib.State
 	samples chan metrics.SampleContainer
 	ev      *eventloop.EventLoop
@@ -2570,7 +2570,7 @@ type testSetup struct {
 func newTestSetup(t testing.TB) testSetup {
 	tb := httpmultibin.NewHTTPMultiBin(t)
 
-	rt := goja.New()
+	rt := sobek.New()
 	rt.SetFieldNameMapper(common.FieldNameMapper{})
 
 	samples := make(chan metrics.SampleContainer, 1000)
@@ -2624,7 +2624,7 @@ func newTestSetup(t testing.TB) testSetup {
 // and event loop, ready to execute scripts as if being executed in the
 // main context of k6.
 func newInitContextTestSetup(t testing.TB) testSetup {
-	rt := goja.New()
+	rt := sobek.New()
 	rt.SetFieldNameMapper(common.FieldNameMapper{})
 
 	samples := make(chan metrics.SampleContainer, 1000)
