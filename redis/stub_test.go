@@ -150,7 +150,7 @@ func (rs *StubServer) Start(secure bool, clientCert []byte) error {
 
 	// The redis-cli will always start a session by sending the
 	// COMMAND message.
-	rs.RegisterCommandHandler("COMMAND", func(c *Connection, args []string) {
+	rs.RegisterCommandHandler("COMMAND", func(c *Connection, _ []string) {
 		c.WriteArray("OK")
 	})
 
