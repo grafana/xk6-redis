@@ -13,10 +13,6 @@ require (
 	gopkg.in/guregu/null.v3 v3.3.0
 )
 
-// To facilitate the integration of the extension in the k6 core codebase
-// we need to use the same version of the dependencies as k6.
-replace github.com/spf13/afero => github.com/spf13/afero v1.1.2
-
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
