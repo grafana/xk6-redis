@@ -2573,9 +2573,6 @@ func newTestSetup(t testing.TB) testSetup {
 	rt := goja.New()
 	rt.SetFieldNameMapper(common.FieldNameMapper{})
 
-	root, err := lib.NewGroup("", nil)
-	require.NoError(t, err)
-
 	samples := make(chan metrics.SampleContainer, 1000)
 
 	// We use self-signed TLS certificates for some tests, and need to disable
@@ -2585,7 +2582,6 @@ func newTestSetup(t testing.TB) testSetup {
 	tb.TLSClientConfig.InsecureSkipVerify = true
 
 	state := &lib.State{
-		Group:  root,
 		Dialer: tb.Dialer,
 		Options: lib.Options{
 			SystemTags: metrics.NewSystemTagSet(
