@@ -448,22 +448,22 @@ type RESPResponseWriter struct {
 
 // WriteSimpleString writes a redis inline string
 func (rw *RESPResponseWriter) WriteSimpleString(s string) {
-	fmt.Fprintf(rw.writer, "+%s\r\n", inline(s))
+	_, _ = fmt.Fprintf(rw.writer, "+%s\r\n", inline(s))
 }
 
 // WriteError writes a redis 'Error'
 func (rw *RESPResponseWriter) WriteError(err error) {
-	fmt.Fprintf(rw.writer, "-%s\r\n", inline(err.Error()))
+	_, _ = fmt.Fprintf(rw.writer, "-%s\r\n", inline(err.Error()))
 }
 
 // WriteInteger writes an integer
 func (rw *RESPResponseWriter) WriteInteger(n int) {
-	fmt.Fprintf(rw.writer, ":%d\r\n", n)
+	_, _ = fmt.Fprintf(rw.writer, ":%d\r\n", n)
 }
 
 // WriteBulkString writes a bulk string
 func (rw *RESPResponseWriter) WriteBulkString(s string) {
-	fmt.Fprintf(rw.writer, "$%d\r\n%s\r\n", len(s), s)
+	_, _ = fmt.Fprintf(rw.writer, "$%d\r\n%s\r\n", len(s), s)
 }
 
 // WriteArray writes a list of strings (bulk)
@@ -481,11 +481,11 @@ func (rw *RESPResponseWriter) WriteArray(strs ...string) {
 
 // WriteNull writes a redis Null element
 func (rw *RESPResponseWriter) WriteNull() {
-	fmt.Fprintf(rw.writer, "$-1\r\n")
+	_, _ = fmt.Fprintf(rw.writer, "$-1\r\n")
 }
 
 func (rw *RESPResponseWriter) writeLen(n int) {
-	fmt.Fprintf(rw.writer, "*%d\r\n", n)
+	_, _ = fmt.Fprintf(rw.writer, "*%d\r\n", n)
 }
 
 func inline(s string) string {
