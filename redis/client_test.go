@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -10,8 +9,6 @@ import (
 	"github.com/grafana/sobek"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.k6.io/k6/js/common"
-	"go.k6.io/k6/js/eventloop"
 	"go.k6.io/k6/js/modulestest"
 	"go.k6.io/k6/lib"
 	"go.k6.io/k6/lib/testutils/httpmultibin"
@@ -198,7 +195,7 @@ func TestClientConstructor(t *testing.T) {
 
 			ts := newTestSetup(t)
 			script := fmt.Sprintf("new Client(%s);", tc.arg)
-			gotScriptErr := ts.ev.Start(func() error {
+			gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 				_, err := ts.rt.RunString(script)
 				return err
 			})
@@ -234,7 +231,7 @@ func TestClientSet(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -283,7 +280,7 @@ func TestClientGet(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -327,7 +324,7 @@ func TestClientGetSet(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -368,7 +365,7 @@ func TestClientDel(t *testing.T) {
 		c.WriteInteger(2)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -406,7 +403,7 @@ func TestClientGetDel(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -445,7 +442,7 @@ func TestClientExists(t *testing.T) {
 		c.WriteInteger(1)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -485,7 +482,7 @@ func TestClientIncr(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -534,7 +531,7 @@ func TestClientIncrBy(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -577,7 +574,7 @@ func TestClientDecr(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -626,7 +623,7 @@ func TestClientDecrBy(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -670,7 +667,7 @@ func TestClientRandomKey(t *testing.T) {
 		c.WriteBulkString("random_key")
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -709,7 +706,7 @@ func TestClientMget(t *testing.T) {
 		c.WriteArray("old_value", "")
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -753,7 +750,7 @@ func TestClientExpire(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -794,7 +791,7 @@ func TestClientTTL(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -835,7 +832,7 @@ func TestClientPersist(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -879,7 +876,7 @@ func TestClientLPush(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -923,7 +920,7 @@ func TestClientRPush(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -966,7 +963,7 @@ func TestClientLPop(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1017,7 +1014,7 @@ func TestClientRPop(t *testing.T) {
 		}
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1080,7 +1077,7 @@ func TestClientLRange(t *testing.T) {
 		c.WriteArray(listState[start : stop+1]...)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1144,7 +1141,7 @@ func TestClientLIndex(t *testing.T) {
 		c.WriteBulkString(listState[index])
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1202,7 +1199,7 @@ func TestClientClientLSet(t *testing.T) {
 		c.WriteOK()
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1248,7 +1245,7 @@ func TestClientLrem(t *testing.T) {
 		c.WriteInteger(1)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1295,7 +1292,7 @@ func TestClientLlen(t *testing.T) {
 		c.WriteInteger(3)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1341,7 +1338,7 @@ func TestClientHSet(t *testing.T) {
 		c.WriteInteger(1)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1395,7 +1392,7 @@ func TestClientHsetnx(t *testing.T) {
 		c.WriteInteger(0)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1439,7 +1436,7 @@ func TestClientHget(t *testing.T) {
 		c.WriteBulkString("bar")
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1483,7 +1480,7 @@ func TestClientHdel(t *testing.T) {
 		c.WriteInteger(1)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1527,7 +1524,7 @@ func TestClientHgetall(t *testing.T) {
 		c.WriteArray("foo", "bar")
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1571,7 +1568,7 @@ func TestClientHkeys(t *testing.T) {
 		c.WriteArray("foo")
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1615,7 +1612,7 @@ func TestClientHvals(t *testing.T) {
 		c.WriteArray("bar")
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1659,7 +1656,7 @@ func TestClientHlen(t *testing.T) {
 		c.WriteInteger(1)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1712,7 +1709,7 @@ func TestClientHincrby(t *testing.T) {
 		c.WriteInteger(fooHValue)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1763,7 +1760,7 @@ func TestClientSadd(t *testing.T) {
 		c.WriteInteger(0)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1814,7 +1811,7 @@ func TestClientSrem(t *testing.T) {
 		c.WriteInteger(0)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1866,7 +1863,7 @@ func TestClientSismember(t *testing.T) {
 		c.WriteInteger(0)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1910,7 +1907,7 @@ func TestClientSmembers(t *testing.T) {
 		c.WriteArray("foo", "bar")
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1951,7 +1948,7 @@ func TestClientSrandmember(t *testing.T) {
 		c.WriteBulkString("foo")
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -1995,7 +1992,7 @@ func TestClientSpop(t *testing.T) {
 		c.WriteBulkString("foo")
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -2041,7 +2038,7 @@ func TestClientSendCommand(t *testing.T) {
 		c.WriteInteger(0)
 	})
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client('redis://%s');
 
@@ -2245,7 +2242,7 @@ func TestClientCommandsInInitContext(t *testing.T) {
 
 			ts := newInitContextTestSetup(t)
 
-			gotScriptErr := ts.ev.Start(func() error {
+			gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 				_, err := ts.rt.RunString(fmt.Sprintf(`
 				const redis = new Client('redis://unreachable:42424');
 
@@ -2441,7 +2438,7 @@ func TestClientCommandsAgainstUnreachableServer(t *testing.T) {
 
 			ts := newTestSetup(t)
 
-			gotScriptErr := ts.ev.Start(func() error {
+			gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 				_, err := ts.rt.RunString(fmt.Sprintf(`
 				const redis = new Client('redis://unreachable:42424');
 
@@ -2556,10 +2553,10 @@ func TestClientIsSupportedType(t *testing.T) {
 // necessary to test the redis client, in the context
 // of the execution of a k6 script.
 type testSetup struct {
+	runtime *modulestest.Runtime
 	rt      *sobek.Runtime
 	state   *lib.State
 	samples chan metrics.SampleContainer
-	ev      *eventloop.EventLoop
 	tb      *httpmultibin.HTTPMultiBin
 }
 
@@ -2568,13 +2565,8 @@ type testSetup struct {
 // and event loop, ready to execute scripts as if being executed in the
 // main context of k6.
 func newTestSetup(t testing.TB) testSetup {
+	ts := newInitContextTestSetup(t)
 	tb := httpmultibin.NewHTTPMultiBin(t)
-
-	rt := sobek.New()
-	rt.SetFieldNameMapper(common.FieldNameMapper{})
-
-	samples := make(chan metrics.SampleContainer, 1000)
-
 	// We use self-signed TLS certificates for some tests, and need to disable
 	// strict verification. Since we don't use the k6 js.Runner, we can't set
 	// the k6 option InsecureSkipTLSVerify for this, and must override it in the
@@ -2592,31 +2584,16 @@ func newTestSetup(t testing.TB) testSetup {
 			),
 			UserAgent: null.StringFrom("TestUserAgent"),
 		},
-		Samples:        samples,
+		Samples:        ts.samples,
 		TLSConfig:      tb.TLSClientConfig,
 		BuiltinMetrics: metrics.RegisterBuiltinMetrics(metrics.NewRegistry()),
 		Tags:           lib.NewVUStateTags(metrics.NewRegistry().RootTagSet()),
 	}
+	ts.runtime.MoveToVUContext(state)
 
-	vu := &modulestest.VU{
-		CtxField:     tb.Context,
-		RuntimeField: rt,
-		StateField:   state,
-	}
-
-	m := new(RootModule).NewModuleInstance(vu)
-	require.NoError(t, rt.Set("Client", m.Exports().Named["Client"]))
-
-	ev := eventloop.New(vu)
-	vu.RegisterCallbackField = ev.RegisterCallback
-
-	return testSetup{
-		rt:      rt,
-		state:   state,
-		samples: samples,
-		ev:      ev,
-		tb:      tb,
-	}
+	ts.state = state
+	ts.tb = tb
+	return ts
 }
 
 // newInitContextTestSetup initializes a new test setup.
@@ -2624,31 +2601,17 @@ func newTestSetup(t testing.TB) testSetup {
 // and event loop, ready to execute scripts as if being executed in the
 // main context of k6.
 func newInitContextTestSetup(t testing.TB) testSetup {
-	rt := sobek.New()
-	rt.SetFieldNameMapper(common.FieldNameMapper{})
-
+	runtime := modulestest.NewRuntime(t)
 	samples := make(chan metrics.SampleContainer, 1000)
 
-	var state *lib.State
-
-	vu := &modulestest.VU{
-		CtxField:     context.Background(),
-		InitEnvField: &common.InitEnvironment{},
-		RuntimeField: rt,
-		StateField:   state,
-	}
-
-	m := new(RootModule).NewModuleInstance(vu)
+	rt := runtime.VU.RuntimeField
+	m := new(RootModule).NewModuleInstance(runtime.VU)
 	require.NoError(t, rt.Set("Client", m.Exports().Named["Client"]))
 
-	ev := eventloop.New(vu)
-	vu.RegisterCallbackField = ev.RegisterCallback
-
 	return testSetup{
+		runtime: runtime,
 		rt:      rt,
-		state:   state,
 		samples: samples,
-		ev:      ev,
 	}
 }
 
@@ -2661,7 +2624,7 @@ func TestClientTLS(t *testing.T) {
 	err := ts.rt.Set("caCert", string(rs.TLSCertificate()))
 	require.NoError(t, err)
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client({
 				socket: {
@@ -2703,7 +2666,7 @@ func TestClientTLSAuth(t *testing.T) {
 	err = ts.rt.Set("clientPKey", string(clientPKey))
 	require.NoError(t, err)
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client({
 				socket: {
@@ -2752,7 +2715,7 @@ func TestClientTLSRespectsNetworkOPtions(t *testing.T) {
 	require.NoError(t, err)
 	ts.tb.Dialer.Blacklist = []*lib.IPNet{net}
 
-	gotScriptErr := ts.ev.Start(func() error {
+	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`
 			const redis = new Client({
 				socket: {
