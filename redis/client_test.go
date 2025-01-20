@@ -1,8 +1,10 @@
 package redis
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"testing"
 
@@ -11,7 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.k6.io/k6/js/modulestest"
 	"go.k6.io/k6/lib"
-	"go.k6.io/k6/lib/testutils/httpmultibin"
+	"go.k6.io/k6/lib/netext"
+	"go.k6.io/k6/lib/types"
 	"go.k6.io/k6/metrics"
 	"gopkg.in/guregu/null.v3"
 )
@@ -2557,7 +2560,6 @@ type testSetup struct {
 	rt      *sobek.Runtime
 	state   *lib.State
 	samples chan metrics.SampleContainer
-	tb      *httpmultibin.HTTPMultiBin
 }
 
 // newTestSetup initializes a new test setup.
@@ -2566,15 +2568,12 @@ type testSetup struct {
 // main context of k6.
 func newTestSetup(t testing.TB) testSetup {
 	ts := newInitContextTestSetup(t)
-	tb := httpmultibin.NewHTTPMultiBin(t)
-	// We use self-signed TLS certificates for some tests, and need to disable
-	// strict verification. Since we don't use the k6 js.Runner, we can't set
-	// the k6 option InsecureSkipTLSVerify for this, and must override it in the
-	// TLS config we use from HTTPMultiBin.
-	tb.TLSClientConfig.InsecureSkipVerify = true
 
 	state := &lib.State{
-		Dialer: tb.Dialer,
+		Dialer: netext.NewDialer(
+			net.Dialer{},
+			netext.NewResolver(net.LookupIP, 0, types.DNSfirst, types.DNSpreferIPv4),
+		),
 		Options: lib.Options{
 			SystemTags: metrics.NewSystemTagSet(
 				metrics.TagURL,
@@ -2585,14 +2584,13 @@ func newTestSetup(t testing.TB) testSetup {
 			UserAgent: null.StringFrom("TestUserAgent"),
 		},
 		Samples:        ts.samples,
-		TLSConfig:      tb.TLSClientConfig,
+		TLSConfig:      &tls.Config{}, //nolint:gosec
 		BuiltinMetrics: metrics.RegisterBuiltinMetrics(metrics.NewRegistry()),
 		Tags:           lib.NewVUStateTags(metrics.NewRegistry().RootTagSet()),
 	}
 	ts.runtime.MoveToVUContext(state)
 
 	ts.state = state
-	ts.tb = tb
 	return ts
 }
 
@@ -2619,6 +2617,7 @@ func TestClientTLS(t *testing.T) {
 	t.Parallel()
 
 	ts := newTestSetup(t)
+	ts.state.TLSConfig.InsecureSkipVerify = true
 	rs := RunTSecure(t, nil)
 
 	err := ts.rt.Set("caCert", string(rs.TLSCertificate()))
@@ -2657,6 +2656,7 @@ func TestClientTLSAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	ts := newTestSetup(t)
+	ts.state.TLSConfig.InsecureSkipVerify = true
 	rs := RunTSecure(t, clientCert)
 
 	err = ts.rt.Set("caCert", string(rs.TLSCertificate()))
@@ -2713,7 +2713,7 @@ func TestClientTLSRespectsNetworkOPtions(t *testing.T) {
 	// Set the redis server's IP to be blacklisted.
 	net, err := lib.ParseCIDR(rs.Addr().IP.String() + "/32")
 	require.NoError(t, err)
-	ts.tb.Dialer.Blacklist = []*lib.IPNet{net}
+	ts.state.Dialer.(*netext.Dialer).Blacklist = []*lib.IPNet{net}
 
 	gotScriptErr := ts.runtime.EventLoop.Start(func() error {
 		_, err := ts.rt.RunString(fmt.Sprintf(`

@@ -69,6 +69,7 @@ type StubServer struct {
 	commandsHistory   [][]string
 
 	tlsCert []byte
+	cert    *tls.Certificate
 }
 
 // NewStubServer instantiates a new RedisStub server.
@@ -103,6 +104,7 @@ func (rs *StubServer) Start(secure bool, clientCert []byte) error {
 		if err != nil {
 			return err
 		}
+		rs.cert = &certPair
 		config := &tls.Config{
 			MinVersion:               tls.VersionTLS13,
 			PreferServerCipherSuites: true,
