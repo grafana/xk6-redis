@@ -6,7 +6,6 @@ metadata:
   description: |
     A k6 extension to test the performance of a Redis instance.
   annotations:
-    backstage.io/techdocs-ref: dir:.
     github.com/project-slug: grafana/xk6-redis
 spec:
   type: library
