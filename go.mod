@@ -2,7 +2,7 @@ module github.com/grafana/xk6-redis
 
 go 1.23.0
 
-toolchain go1.23.7
+toolchain go1.23.10
 
 require (
 	github.com/dop251/goja v0.0.0-20240516125602-ccbae20bcec2 // indirect
