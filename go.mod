@@ -8,7 +8,7 @@ require (
 	github.com/dop251/goja v0.0.0-20240516125602-ccbae20bcec2 // indirect
 	github.com/grafana/sobek v0.0.0-20240606091932-2da0e9e5f3e7
 	github.com/redis/go-redis/v9 v9.6.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.11.1
 	go.k6.io/k6 v0.51.1-0.20240606120708-bd114fdbd683
 
 	// To facilitate the integration of the extension in the k6 core codebase
