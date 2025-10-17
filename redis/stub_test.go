@@ -2,6 +2,7 @@ package redis
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -121,7 +122,7 @@ func (rs *StubServer) Start(secure bool, clientCert []byte) error {
 		}
 	} else {
 		var err error
-		if listener, err = net.Listen("tcp", addr); err != nil {
+		if listener, err = (&net.ListenConfig{}).Listen(context.Background(), "tcp", addr); err != nil {
 			return err
 		}
 	}
