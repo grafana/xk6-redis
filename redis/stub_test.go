@@ -2,11 +2,13 @@ package redis
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
 	"net"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -70,15 +72,19 @@ type StubServer struct {
 
 	tlsCert []byte
 	cert    *tls.Certificate
+
+	// list of commands to not be recorded
+	ignoredCommands []string
 }
 
 // NewStubServer instantiates a new RedisStub server.
 func NewStubServer() *StubServer {
 	return &StubServer{
-		listener:    nil,
-		boundAddr:   nil,
-		connections: map[net.Conn]struct{}{},
-		handlers:    make(map[string]func(*Connection, []string)),
+		listener:        nil,
+		boundAddr:       nil,
+		connections:     map[net.Conn]struct{}{},
+		handlers:        make(map[string]func(*Connection, []string)),
+		ignoredCommands: []string{"CLIENT"}, // this is usually not interesting
 	}
 }
 
@@ -121,7 +127,7 @@ func (rs *StubServer) Start(secure bool, clientCert []byte) error {
 		}
 	} else {
 		var err error
-		if listener, err = net.Listen("tcp", addr); err != nil {
+		if listener, err = (&net.ListenConfig{}).Listen(context.Background(), "tcp", addr); err != nil {
 			return err
 		}
 	}
@@ -268,10 +274,12 @@ func (rs *StubServer) handleConnection(nc net.Conn) {
 			return
 		}
 
-		rs.Lock()
-		request := append([]string{command}, args...)
-		rs.commandsHistory = append(rs.commandsHistory, request)
-		rs.Unlock()
+		if !slices.Contains(rs.ignoredCommands, command) {
+			rs.Lock()
+			request := append([]string{command}, args...)
+			rs.commandsHistory = append(rs.commandsHistory, request)
+			rs.Unlock()
+		}
 
 		rs.handleCommand(connection, command, args)
 		connection.Flush()
