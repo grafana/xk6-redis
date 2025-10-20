@@ -13,7 +13,7 @@ require (
 
 	// To facilitate the integration of the extension in the k6 core codebase
 	// we need to use the same version of the dependencies as k6.
-	gopkg.in/guregu/null.v3 v3.3.0
+	gopkg.in/guregu/null.v3 v3.5.0
 )
 
 require (
