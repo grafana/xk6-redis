@@ -274,7 +274,7 @@ func (rs *StubServer) handleConnection(nc net.Conn) {
 			return
 		}
 
-		if slices.Contains(rs.ignoredCommands, command) {
+		if !slices.Contains(rs.ignoredCommands, command) {
 			rs.Lock()
 			request := append([]string{command}, args...)
 			rs.commandsHistory = append(rs.commandsHistory, request)
