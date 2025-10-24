@@ -1,15 +1,35 @@
 # xk6-redis
 
-This is a Redis client library for [k6](https://github.com/grafana/k6),
-implemented as an extension using the [xk6](https://github.com/grafana/xk6) system.
+This is a Redis client library for [k6](https://github.com/grafana/k6).
 
-| :exclamation: This extension is an experimental project, and breaking changes are possible. USE AT YOUR OWN RISK! |
-|-------------------------------------------------------------------------------------------------------------------|
+## Get started
+
+Add the extension's import
+```js
+import redis from "k6/x/redis";
+```
+
+Define the client
+```js
+import redis from "k6/x/redis";
+
+// Instantiate a new Redis client using a URL.
+// The connection will be established on the first command call.
+const client = new redis.Client('redis://localhost:6379');
+```
+
+Call the API from the VU context
+
+```js
+export default function () {
+  redisClient.sadd("crocodile_ids", ...crocodileIDs);
+...
+}
+```
 
 ## Build
 
-This extension is available as an [experimental k6 module](https://k6.io/docs/javascript-api/k6-experimental/redis/) since k6 v0.40.0, so you don't need to build it with xk6 yourself, and can use it with the main k6 binary. Note that your script must import `k6/experimental/redis` instead of `k6/x/redis` if you're using the module bundled in k6.
-
+The most common and simple case is to use k6 with automatic extension resolution. Simply add the extension's import and k6 will resolve the dependency automtically.  
 However, if you prefer to build it from source using xk6, first ensure you have the prerequisites:
 
 - [Go toolchain](https://go101.org/article/go-toolchain.html)
