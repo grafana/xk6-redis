@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["schedule:weekly"],
+  "packageRules": [
+    {
+      "description": "Disable updates for all dependencies by default",
+      "matchManagers": ["gomod"],
+      "enabled": false
+    },
+    {
+      "description": "k6 core and ecosystem packages",
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["go.k6.io/k6"],
+      "groupName": "k6 ecosystem",
+      "enabled": true
+    },
+    {
+      "description": "Redis library - critical for functionality",
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["github.com/redis/go-redis/**"],
+      "enabled": true
+    }
+  ]
+}
