@@ -1,6 +1,6 @@
 # xk6-redis
 
-This is a Redis client library for [k6](https://github.com/grafana/k6).
+This is an official k6 extension, it's a client library for [Redis](https://redis.io) database.
 
 ## Get started
 
