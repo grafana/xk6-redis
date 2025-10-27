@@ -6,7 +6,7 @@ toolchain go1.23.10
 
 require (
 	github.com/dop251/goja v0.0.0-20240516125602-ccbae20bcec2 // indirect
-	github.com/grafana/sobek v0.0.0-20240606091932-2da0e9e5f3e7
+	github.com/grafana/sobek v0.0.0-20251027085606-10d992055e22
 	github.com/redis/go-redis/v9 v9.6.3
 	github.com/stretchr/testify v1.9.0
 	go.k6.io/k6 v0.51.1-0.20240606120708-bd114fdbd683
@@ -21,7 +21,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/dlclark/regexp2 v1.9.0 // indirect
+	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/evanw/esbuild v0.21.2 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect

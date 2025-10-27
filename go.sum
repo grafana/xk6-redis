@@ -13,8 +13,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/rVNCu3HqELle0jiPLLBs70cWOduZpkS1E78=
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
-github.com/dlclark/regexp2 v1.9.0 h1:pTK/l/3qYIKaRXuHnEnIf7Y5NxfRPfpb7dis6/gdlVI=
-github.com/dlclark/regexp2 v1.9.0/go.mod h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=
+github.com/dlclark/regexp2 v1.11.5 h1:Q/sSnsKerHeCkc/jSTNq1oCm7KiVgUMZRDUoRu0JQZQ=
+github.com/dlclark/regexp2 v1.11.5/go.mod h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=
 github.com/dop251/goja v0.0.0-20240516125602-ccbae20bcec2 h1:OFTHt+yJDo/uaIKMGjEKzc3DGhrpQZoqvMUIloZv6ZY=
 github.com/dop251/goja v0.0.0-20240516125602-ccbae20bcec2/go.mod h1:o31y53rb/qiIAONF7w3FHJZRqqP3fzHUr1HqanthByw=
 github.com/evanw/esbuild v0.21.2 h1:CLplcGi794CfHLVmUbvVfTMKkykm+nyIHU8SU60KUTA=
@@ -49,8 +49,8 @@ github.com/google/pprof v0.0.0-20230728192033-2ba5b33183c6 h1:ZgoomqkdjGbQ3+qQXC
 github.com/google/pprof v0.0.0-20230728192033-2ba5b33183c6/go.mod h1:Jh3hGz2jkYak8qXPD19ryItVnUgpgeqzdkY/D0EaeuA=
 github.com/gorilla/websocket v1.5.1 h1:gmztn0JnHVt9JZquRuzLw3g4wouNVzKL15iLr/zn/QY=
 github.com/gorilla/websocket v1.5.1/go.mod h1:x3kM2JMyaluk02fnUJpQuwD2dCS5NDG2ZHL0uE0tcaY=
-github.com/grafana/sobek v0.0.0-20240606091932-2da0e9e5f3e7 h1:Ed0df3dkkPsjL0RKagJAv/821vrTBiB6GBk+198pxi4=
-github.com/grafana/sobek v0.0.0-20240606091932-2da0e9e5f3e7/go.mod h1:6ZH0b0iOxyigeTh+/IlGoL0Hd3lVXA94xoXf0ldNgCM=
+github.com/grafana/sobek v0.0.0-20251027085606-10d992055e22 h1:r2G2c5yGYI3PFo0rt86tWMdiHXZ2AA7b1f4W3cmbf1c=
+github.com/grafana/sobek v0.0.0-20251027085606-10d992055e22/go.mod h1:zCP0OTgxTC2v1Bg6kVd2lc9MeMlEAy3t6qO9bqhEqHE=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0 h1:Wqo399gCIufwto+VfwCSvsnfGpF/w5E9CNxSwbpD6No=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0/go.mod h1:qmOFXW2epJhM0qSnUUYpldc7gVz2KMQwJ/QYCDIa7XU=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
