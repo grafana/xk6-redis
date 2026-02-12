@@ -6,7 +6,7 @@ toolchain go1.24.10
 
 require (
 	github.com/grafana/sobek v0.0.0-20251124090928-9a028a30ff58
-	github.com/redis/go-redis/v9 v9.17.2
+	github.com/redis/go-redis/v9 v9.17.3
 	github.com/stretchr/testify v1.11.1
 	go.k6.io/k6 v1.5.0
 
