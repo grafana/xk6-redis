@@ -28,7 +28,7 @@ type Client struct {
 // If the provided value is not a supported type, the promise is rejected with an error.
 //
 // The value for `expiration` is interpreted as seconds.
-func (c *Client) Set(key string, value interface{}, expiration int) *sobek.Promise {
+func (c *Client) Set(key string, value any, expiration int) *sobek.Promise {
 	promise, resolve, reject := promises.New(c.vu)
 
 	if err := c.connect(); err != nil {
@@ -83,7 +83,7 @@ func (c *Client) Get(key string) *sobek.Promise {
 // GetSet sets the value of key to value and returns the old value stored
 //
 // If the provided value is not a supported type, the promise is rejected with an error.
-func (c *Client) GetSet(key string, value interface{}) *sobek.Promise {
+func (c *Client) GetSet(key string, value any) *sobek.Promise {
 	promise, resolve, reject := promises.New(c.vu)
 
 	if err := c.connect(); err != nil {
@@ -400,7 +400,7 @@ func (c *Client) Persist(key string) *sobek.Promise {
 // at `key`. If `key` does not exist, it is created as empty list before
 // performing the push operations. When `key` holds a value that is not
 // a list, and error is returned.
-func (c *Client) Lpush(key string, values ...interface{}) *sobek.Promise {
+func (c *Client) Lpush(key string, values ...any) *sobek.Promise {
 	promise, resolve, reject := promises.New(c.vu)
 
 	if err := c.connect(); err != nil {
@@ -429,7 +429,7 @@ func (c *Client) Lpush(key string, values ...interface{}) *sobek.Promise {
 // Rpush inserts all the specified values at the tail of the list stored
 // at `key`. If `key` does not exist, it is created as empty list before
 // performing the push operations.
-func (c *Client) Rpush(key string, values ...interface{}) *sobek.Promise {
+func (c *Client) Rpush(key string, values ...any) *sobek.Promise {
 	promise, resolve, reject := promises.New(c.vu)
 
 	if err := c.connect(); err != nil {
@@ -637,7 +637,7 @@ func (c *Client) Llen(key string) *sobek.Promise {
 // If `field` already exists in the hash, it is overwritten.
 //
 // If the hash does not exist, this command rejects the promise with an error.
-func (c *Client) Hset(key string, field string, value interface{}) *sobek.Promise {
+func (c *Client) Hset(key string, field string, value any) *sobek.Promise {
 	promise, resolve, reject := promises.New(c.vu)
 
 	if err := c.connect(); err != nil {
@@ -858,7 +858,7 @@ func (c *Client) Hincrby(key, field string, increment int64) *sobek.Promise {
 // Sadd adds the specified members to the set stored at key.
 // Specified members that are already a member of this set are ignored.
 // If key does not exist, a new set is created before adding the specified members.
-func (c *Client) Sadd(key string, members ...interface{}) *sobek.Promise {
+func (c *Client) Sadd(key string, members ...any) *sobek.Promise {
 	promise, resolve, reject := promises.New(c.vu)
 
 	if err := c.connect(); err != nil {
@@ -887,7 +887,7 @@ func (c *Client) Sadd(key string, members ...interface{}) *sobek.Promise {
 // Srem removes the specified members from the set stored at key.
 // Specified members that are not a member of this set are ignored.
 // If key does not exist, it is treated as an empty set and this command returns 0.
-func (c *Client) Srem(key string, members ...interface{}) *sobek.Promise {
+func (c *Client) Srem(key string, members ...any) *sobek.Promise {
 	promise, resolve, reject := promises.New(c.vu)
 
 	if err := c.connect(); err != nil {
@@ -914,7 +914,7 @@ func (c *Client) Srem(key string, members ...interface{}) *sobek.Promise {
 }
 
 // Sismember returns if member is a member of the set stored at key.
-func (c *Client) Sismember(key string, member interface{}) *sobek.Promise {
+func (c *Client) Sismember(key string, member any) *sobek.Promise {
 	promise, resolve, reject := promises.New(c.vu)
 
 	if err := c.connect(); err != nil {
@@ -1011,8 +1011,8 @@ func (c *Client) Spop(key string) *sobek.Promise {
 }
 
 // SendCommand sends a command to the redis server.
-func (c *Client) SendCommand(command string, args ...interface{}) *sobek.Promise {
-	var doArgs []interface{}
+func (c *Client) SendCommand(command string, args ...any) *sobek.Promise {
+	doArgs := make([]any, 0, 1+len(args))
 	doArgs = append(doArgs, command)
 	doArgs = append(doArgs, args...)
 
@@ -1117,7 +1117,7 @@ func (c *Client) IsConnected() bool {
 // For instance, when calling `set`, which takes a key, and a value argument,
 // isSupportedType applied to the value should eventually report an error with
 // the argument in position 1.
-func (c *Client) isSupportedType(offset int, args ...interface{}) error {
+func (c *Client) isSupportedType(offset int, args ...any) error {
 	for idx, arg := range args {
 		switch arg.(type) {
 		case string, int, int64, float64, bool:
