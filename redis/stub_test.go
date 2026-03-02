@@ -151,7 +151,7 @@ func (rs *StubServer) Start(secure bool, clientCert []byte) error {
 
 		rs.Lock()
 		for c := range rs.connections {
-			c.Close() //nolint:errcheck,gosec
+			c.Close() //nolint:errcheck
 		}
 		rs.Unlock()
 	}()

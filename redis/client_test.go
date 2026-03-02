@@ -2460,61 +2460,61 @@ func TestClientIsSupportedType(t *testing.T) {
 		tests := []struct {
 			name    string
 			offset  int
-			args    []interface{}
+			args    []any
 			wantErr bool
 		}{
 			{
 				name:    "string is a supported type",
 				offset:  1,
-				args:    []interface{}{"foo"},
+				args:    []any{"foo"},
 				wantErr: false,
 			},
 			{
 				name:    "int is a supported type",
 				offset:  1,
-				args:    []interface{}{int(123)},
+				args:    []any{int(123)},
 				wantErr: false,
 			},
 			{
 				name:    "int64 is a supported type",
 				offset:  1,
-				args:    []interface{}{int64(123)},
+				args:    []any{int64(123)},
 				wantErr: false,
 			},
 			{
 				name:    "float64 is a supported type",
 				offset:  1,
-				args:    []interface{}{float64(123)},
+				args:    []any{float64(123)},
 				wantErr: false,
 			},
 			{
 				name:    "bool is a supported type",
 				offset:  1,
-				args:    []interface{}{bool(true)},
+				args:    []any{bool(true)},
 				wantErr: false,
 			},
 			{
 				name:    "multiple identical types args are supported",
 				offset:  1,
-				args:    []interface{}{int(123), int(456)},
+				args:    []any{int(123), int(456)},
 				wantErr: false,
 			},
 			{
 				name:    "multiple mixed types args are supported",
 				offset:  1,
-				args:    []interface{}{int(123), "foo", bool(true)},
+				args:    []any{int(123), "foo", bool(true)},
 				wantErr: false,
 			},
 			{
 				name:    "slice[T] is not a supported type",
 				offset:  1,
-				args:    []interface{}{[]string{"1", "2", "3"}},
+				args:    []any{[]string{"1", "2", "3"}},
 				wantErr: true,
 			},
 			{
 				name:    "multiple mixed valid and invalid types args are not supported",
 				offset:  1,
-				args:    []interface{}{int(123), []string{"1", "2", "3"}},
+				args:    []any{int(123), []string{"1", "2", "3"}},
 				wantErr: true,
 			},
 		}
@@ -2577,7 +2577,7 @@ func newTestSetup(t testing.TB) testSetup {
 			UserAgent: null.StringFrom("TestUserAgent"),
 		},
 		Samples:        ts.samples,
-		TLSConfig:      &tls.Config{}, //nolint:gosec
+		TLSConfig:      &tls.Config{},
 		BuiltinMetrics: metrics.RegisterBuiltinMetrics(metrics.NewRegistry()),
 		Tags:           lib.NewVUStateTags(metrics.NewRegistry().RootTagSet()),
 	}
