@@ -144,9 +144,7 @@ func (rs *StubServer) Start(secure bool, clientCert []byte) error {
 
 	rs.boundAddr = boundAddr
 
-	rs.waitGroup.Add(1)
-	go func() {
-		defer rs.waitGroup.Done()
+	rs.waitGroup.Go(func() {
 		rs.listenAndServe(listener)
 
 		rs.Lock()
@@ -154,7 +152,7 @@ func (rs *StubServer) Start(secure bool, clientCert []byte) error {
 			c.Close() //nolint:errcheck
 		}
 		rs.Unlock()
-	}()
+	})
 
 	// The redis-cli will always start a session by sending the
 	// COMMAND message.
