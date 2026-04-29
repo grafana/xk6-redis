@@ -16,7 +16,6 @@ import (
 	"go.k6.io/k6/lib/netext"
 	"go.k6.io/k6/lib/types"
 	"go.k6.io/k6/metrics"
-	"gopkg.in/guregu/null.v3"
 )
 
 func TestClientConstructor(t *testing.T) {
@@ -2574,7 +2573,6 @@ func newTestSetup(t testing.TB) testSetup {
 				metrics.TagStatus,
 				metrics.TagSubproto,
 			),
-			UserAgent: null.StringFrom("TestUserAgent"),
 		},
 		Samples:        ts.samples,
 		TLSConfig:      &tls.Config{},
