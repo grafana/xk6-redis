@@ -1,8 +1,6 @@
 module github.com/grafana/xk6-redis
 
-go 1.25.0
-
-toolchain go1.25.10
+go 1.25.11
 
 require (
 	github.com/grafana/sobek v0.0.0-20260331145705-2272ac4993ef
