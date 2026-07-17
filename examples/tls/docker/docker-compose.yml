@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   redis:
-    image: docker.io/bitnami/redis:7.0.8
+    image: docker.io/soldevelo/redis:7.0.15
     user: root
     restart: always
     environment:
