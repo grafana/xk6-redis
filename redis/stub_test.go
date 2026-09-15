@@ -112,9 +112,8 @@ func (rs *StubServer) Start(secure bool, clientCert []byte) error {
 		}
 		rs.cert = &certPair
 		config := &tls.Config{
-			MinVersion:               tls.VersionTLS13,
-			PreferServerCipherSuites: true,
-			Certificates:             []tls.Certificate{certPair},
+			MinVersion:   tls.VersionTLS13,
+			Certificates: []tls.Certificate{certPair},
 		}
 		if clientCert != nil {
 			clientCertPool := x509.NewCertPool()

@@ -222,7 +222,7 @@ func TestClientSet(t *testing.T) {
 		}
 
 		switch args[0] {
-		case "existing_key", "non_existing_key": //nolint:goconst
+		case "existing_key", "non_existing_key":
 			c.WriteOK()
 		case "expires":
 			if len(args) != 4 && args[2] != "EX" && args[3] != "0" {
@@ -869,7 +869,7 @@ func TestClientLPush(t *testing.T) {
 		existingList := []string{"existing_key"}
 
 		switch args[0] {
-		case "existing_list": //nolint:goconst
+		case "existing_list":
 			existingList = append(args[1:], existingList...)
 			c.WriteInteger(len(existingList))
 		case "new_list":
@@ -959,7 +959,7 @@ func TestClientLPop(t *testing.T) {
 		case "existing_list":
 			c.WriteBulkString(listState[0])
 			listState = listState[1:]
-		case "non_existing_list": //nolint:goconst
+		case "non_existing_list":
 			c.WriteNull()
 		}
 	})
@@ -1331,7 +1331,7 @@ func TestClientHSet(t *testing.T) {
 			return
 		}
 
-		if args[0] == "non_existing_hash" { //nolint:goconst
+		if args[0] == "non_existing_hash" {
 			c.WriteError(errors.New("ERR no such key"))
 			return
 		}
@@ -1747,7 +1747,7 @@ func TestClientSadd(t *testing.T) {
 			return
 		}
 
-		if args[0] == "non_existing_set" { //nolint:goconst
+		if args[0] == "non_existing_set" {
 			c.WriteInteger(1)
 			return
 		}
