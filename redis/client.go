@@ -1150,8 +1150,17 @@ func (c *Client) upgradeDialerToTLS(dialer lib.DialContexter, config *tls.Config
 			return nil, err
 		}
 
+		host, _, err := net.SplitHostPort(addr)
+		if err != nil {
+			host = addr
+		}
+
+		tlsConfig := config.Clone()
+		// Use the host of the individual Valkey node as TLS SNI.
+		tlsConfig.ServerName = host
+
 		// Upgrade the connection to TLS if needed
-		tlsConn := tls.Client(rawConn, config)
+		tlsConn := tls.Client(rawConn, tlsConfig)
 		err = tlsConn.HandshakeContext(ctx)
 		if err != nil {
 			if closeErr := rawConn.Close(); closeErr != nil {
