@@ -25,3 +25,4 @@ The extension follows k6's standard module pattern: a root module creates per-VU
 - The linter config is not committed. It is downloaded from k6 core's master branch on first lint run. Do not commit it.
 
 - The underlying go-redis client is instantiated once per VU on first use. go-redis manages its own connection pool and reconnection internally, but the k6-level client wrapper has no mechanism to re-apply VU-level config changes (TLS, dialer) after initial setup.
+- Security issues should be reported via [Grafana's security issue reporting page](https://grafana.com/legal/report-a-security-issue/) and not directly in this repository.
